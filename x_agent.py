@@ -42,7 +42,24 @@ def _mean_gap(draw):
     return sum(gaps) / len(gaps)
 
 
-def predict(history: pd.DataFrame, competition_gate: bool = True) -> Prediction:
+def _spacing_features(draw):
+    """Internal six-gap geometry, independent of absolute center/range."""
+    gaps = [b - a for a, b in zip(draw, draw[1:])]
+    if not gaps:
+        return 0.0, 0.0
+    mean_gap = sum(gaps) / len(gaps)
+    irregularity = (
+        sum((g - mean_gap) ** 2 for g in gaps) / len(gaps)
+    ) ** 0.5 / max(mean_gap, 1e-9)
+    short_share = sum(g <= 2 for g in gaps) / len(gaps)
+    return irregularity, short_share
+
+
+def predict(
+    history: pd.DataFrame,
+    competition_gate: bool = True,
+    spacing_v2: bool = False,
+) -> Prediction:
     """Dynamic Structure X for a non-intervenable Field.
 
     Field -> Relation -> Weight -> Flow.  Shape and gap geometry relations are
@@ -87,15 +104,31 @@ def predict(history: pd.DataFrame, competition_gate: bool = True) -> Prediction:
     gap_recent = sum(_mean_gap(d) for d in recent[-4:]) / 4.0
     gap_before = sum(_mean_gap(d) for d in recent[:4]) / 4.0
     gap_delta = gap_recent - gap_before
-    w_geom = 0.08 + 0.12 * min(1.0, abs(gap_delta) / 2.5)
 
-    # Competition Gate: shape and geometry currently share the same
-    # outer/center axis. If they point the same way, geometry adds no new
-    # information and is suppressed; when they conflict it remains observable.
-    relation_conflict = (shape_delta >= 0) != (gap_delta >= 0)
-    geom_active = (not competition_gate) or relation_conflict
-    if not geom_active:
-        w_geom = 0.0
+    recent_features = [_spacing_features(d) for d in recent[-4:]]
+    before_features = [_spacing_features(d) for d in recent[:4]]
+    irr_recent = sum(v[0] for v in recent_features) / 4.0
+    irr_before = sum(v[0] for v in before_features) / 4.0
+    short_recent = sum(v[1] for v in recent_features) / 4.0
+    short_before = sum(v[1] for v in before_features) / 4.0
+    irr_delta = irr_recent - irr_before
+    short_delta = short_recent - short_before
+    target_irregularity = max(0.0, min(1.5, irr_recent + 0.25 * irr_delta))
+    target_short_share = max(0.0, min(1.0, short_recent + 0.25 * short_delta))
+
+    if spacing_v2:
+        # A distinct local-spacing axis: no absolute-number or center signal.
+        strength = min(1.0, abs(irr_delta) / 0.35 + abs(short_delta) / 0.30)
+        w_geom = 0.08 + 0.12 * strength
+        relation_conflict = False
+        geom_active = True
+    else:
+        w_geom = 0.08 + 0.12 * min(1.0, abs(gap_delta) / 2.5)
+        # Legacy relation shares Shape's outer/center axis. Gate redundancy.
+        relation_conflict = (shape_delta >= 0) != (gap_delta >= 0)
+        geom_active = (not competition_gate) or relation_conflict
+        if not geom_active:
+            w_geom = 0.0
 
     base_scale = 1.0 - w_shape - w_geom
     if base_scale < 0.55:
@@ -125,10 +158,12 @@ def predict(history: pd.DataFrame, competition_gate: bool = True) -> Prediction:
         is_outer = 1.0 if (n <= 12 or n >= 26) else 0.0
         shape = is_outer if shape_delta >= 0 else 1.0 - is_outer
 
-        # Geometry score: wider spacing favors distance from the center; tighter
-        # spacing favors the central band. This is deliberately soft.
-        dist_center = abs(n - 19.0) / 18.0
-        geometry = dist_center if gap_delta >= 0 else 1.0 - dist_center
+        if spacing_v2:
+            # Pair geometry cannot be assigned honestly to an isolated number.
+            geometry = 0.0
+        else:
+            dist_center = abs(n - 19.0) / 18.0
+            geometry = dist_center if gap_delta >= 0 else 1.0 - dist_center
 
         scores[n] = (
             w_persist * persist
@@ -143,23 +178,43 @@ def predict(history: pd.DataFrame, competition_gate: bool = True) -> Prediction:
 
     chosen = []
     target_gap = max(2.5, min(7.5, 5.0 + gap_delta * 0.35))
-    for n in ranked:
-        if not chosen:
-            chosen.append(n)
-            continue
-        if len(chosen) >= 7:
-            break
-        trial = sorted(chosen + [n])
-        mean_gap = _mean_gap(trial)
-        spread_ok = len(trial) <= 3 or (max(trial) - min(trial)) >= 3 * (len(trial) - 1)
-        geom_ok = (not geom_active) or len(trial) <= 3 or abs(mean_gap - target_gap) <= 2.75
-        if spread_ok and geom_ok:
-            chosen.append(n)
-    for n in ranked:
-        if len(chosen) >= 7:
-            break
-        if n not in chosen:
-            chosen.append(n)
+    if spacing_v2:
+        # Compose the set relationally. The fixed anti-cluster rule is removed;
+        # each next number is judged by the six-gap shape it helps create.
+        while len(chosen) < 7:
+            candidates = []
+            for n in NUMBERS:
+                if n in chosen:
+                    continue
+                trial = sorted(chosen + [n])
+                if len(trial) < 4:
+                    spacing_error = 0.0
+                else:
+                    irr, short = _spacing_features(trial)
+                    spacing_error = (
+                        abs(irr - target_irregularity)
+                        + abs(short - target_short_share)
+                    )
+                candidates.append((scores[n] - w_geom * spacing_error, scores[n], -n, n))
+            chosen.append(max(candidates)[3])
+    else:
+        for n in ranked:
+            if not chosen:
+                chosen.append(n)
+                continue
+            if len(chosen) >= 7:
+                break
+            trial = sorted(chosen + [n])
+            mean_gap = _mean_gap(trial)
+            spread_ok = len(trial) <= 3 or (max(trial) - min(trial)) >= 3 * (len(trial) - 1)
+            geom_ok = (not geom_active) or len(trial) <= 3 or abs(mean_gap - target_gap) <= 2.75
+            if spread_ok and geom_ok:
+                chosen.append(n)
+        for n in ranked:
+            if len(chosen) >= 7:
+                break
+            if n not in chosen:
+                chosen.append(n)
 
     chosen = tuple(sorted(chosen[:7]))
     center = _mean(chosen)
@@ -175,6 +230,11 @@ def predict(history: pd.DataFrame, competition_gate: bool = True) -> Prediction:
             "shape_delta": round(shape_delta, 4),
             "gap_delta": round(gap_delta, 4),
             "target_gap": round(target_gap, 4),
+            "spacing_irregularity_delta": round(irr_delta, 4),
+            "spacing_short_delta": round(short_delta, 4),
+            "target_irregularity": round(target_irregularity, 4),
+            "target_short_share": round(target_short_share, 4),
+            "spacing_v2": int(spacing_v2),
             "volatility": round(volatility, 4),
             "w_persist": round(w_persist, 4),
             "w_reverse": round(w_reverse, 4),
