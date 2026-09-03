@@ -34,18 +34,40 @@ def random_prediction(round_no: int) -> tuple[int, ...]:
 def run(window: int = 100) -> pd.DataFrame:
     df = pd.read_csv(DATA).sort_values("round").reset_index(drop=True)
     rows = []
+    action_evidence = 0.0
+    action_opportunities = 0
     for i in range(window, len(df)):
         history = df.iloc[i-window:i]
         actual = actual_numbers(df.iloc[i])
         rnd = int(df.iloc[i]["round"])
+
+        champion = x_agent.predict(history, competition_gate=True)
+        action = x_agent.predict(
+            history, competition_gate=True, spacing_v2=True, action_point=True
+        )
+        changed = action.numbers != champion.numbers
+        probe_due = changed and (
+            action_opportunities < 5
+            or action_evidence > 0
+            or action_opportunities % 5 == 0
+        )
+        selected = action if probe_due else champion
+        reentry_state = dict(selected.state)
+        reentry_state.update({
+            "reentry_mode": "probe_or_continue" if probe_due else "cut",
+            "reentry_evidence_before": round(action_evidence, 4),
+            "reentry_probe": int(probe_due),
+            "reentry_opportunity": int(changed),
+        })
+        reentry = x_agent.Prediction(selected.numbers, reentry_state)
+
         predictions = {
             "lotocore": lotocore.predict(history),
-            "x": x_agent.predict(history, competition_gate=True),
+            "x": champion,
             "x_ungated": x_agent.predict(history, competition_gate=False),
             "x_spacing2": x_agent.predict(history, competition_gate=True, spacing_v2=True),
-            "x_actionpoint": x_agent.predict(
-                history, competition_gate=True, spacing_v2=True, action_point=True
-            ),
+            "x_actionpoint": action,
+            "x_reentry": reentry,
             "random": None,
         }
         for model, pred_obj in predictions.items():
@@ -57,12 +79,19 @@ def run(window: int = 100) -> pd.DataFrame:
                    "prediction":"-".join(map(str,pred)),"actual":"-".join(map(str,actual)),**metrics(pred,actual)}
             row.update({k:v for k,v in state.items() if k != "model"})
             rows.append(row)
-    return pd.DataFrame(rows)
 
+        # Observe the result, attribute the delta, then re-enter next round.
+        if changed:
+            action_opportunities += 1
+        if probe_due:
+            action_hits = metrics(action.numbers, actual)["hits"]
+            champion_hits = metrics(champion.numbers, actual)["hits"]
+            action_evidence = 0.75 * action_evidence + 0.25 * (action_hits - champion_hits)
+    return pd.DataFrame(rows)
 
 def summarize(results: pd.DataFrame) -> None:
     print("\n=== WALK FORWARD SUMMARY ===")
-    for model in ("lotocore","x","x_ungated","x_spacing2","x_actionpoint","random"):
+    for model in ("lotocore","x","x_ungated","x_spacing2","x_actionpoint","x_reentry","random"):
         g=results[results.model==model]
         print(f"{model:8s} n={len(g)} mean_hits={g.hits.mean():.4f} hit3+={(g.hits>=3).mean():.4f} best={g.hits.max()} mean_center_error={g.center_error.mean():.4f} mean_variance_error={g.variance_error.mean():.4f} hit_distribution={g.hits.value_counts().sort_index().to_dict()}")
     pivot=results.pivot(index="round",columns="model",values="hits")
@@ -73,6 +102,9 @@ def summarize(results: pd.DataFrame) -> None:
     ap=results[results.model=="x_actionpoint"]
     print(f"ACTION POINT FIRES={int(ap.spacing_engaged.sum())}/{len(ap)} rate={ap.spacing_engaged.mean():.4f} signal_mean={ap.action_signal.mean():.4f}")
     print(f"MICRO ACTION APPLIED={int(ap.micro_applied.sum())}/{len(ap)} utility_mean={ap.loc[ap.micro_applied==1,'micro_utility'].mean():.6f}")
+    print(f"RE-ENTRY VERSUS CHAMPION RE>Gate={(pivot.x_reentry>pivot.x).sum()} RE=Gate={(pivot.x_reentry==pivot.x).sum()} RE<Gate={(pivot.x_reentry<pivot.x).sum()}")
+    re=results[results.model=="x_reentry"]
+    print(f"RE-ENTRY PROBES={int(re.reentry_probe.fillna(0).sum())} OPPORTUNITIES={int(re.reentry_opportunity.fillna(0).sum())} final_evidence={re.reentry_evidence_before.dropna().iloc[-1]:.4f}")
 
 
 def diagnose_x(results: pd.DataFrame) -> None:
