@@ -72,6 +72,7 @@ def summarize(results: pd.DataFrame) -> None:
     print(f"ACTION POINT VERSUS CHAMPION AP>Gate={(pivot.x_actionpoint>pivot.x).sum()} AP=Gate={(pivot.x_actionpoint==pivot.x).sum()} AP<Gate={(pivot.x_actionpoint<pivot.x).sum()}")
     ap=results[results.model=="x_actionpoint"]
     print(f"ACTION POINT FIRES={int(ap.spacing_engaged.sum())}/{len(ap)} rate={ap.spacing_engaged.mean():.4f} signal_mean={ap.action_signal.mean():.4f}")
+    print(f"MICRO ACTION APPLIED={int(ap.micro_applied.sum())}/{len(ap)} utility_mean={ap.loc[ap.micro_applied==1,'micro_utility'].mean():.6f}")
 
 
 def diagnose_x(results: pd.DataFrame) -> None:
