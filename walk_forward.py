@@ -61,6 +61,20 @@ def run(window: int = 100) -> pd.DataFrame:
         })
         reentry = x_agent.Prediction(selected.numbers, reentry_state)
 
+        # Style candidate observed in Run #17: X benefits when global spread
+        # and local spacing irregularity expand together.
+        style_active = changed and (
+            action.state["field_spread_delta"] > 0
+            and action.state["spacing_irregularity_delta"] > 0
+        )
+        style_selected = action if style_active else champion
+        style_state = dict(style_selected.state)
+        style_state.update({
+            "style_active": int(style_active),
+            "style": "expansion" if style_active else "origin",
+        })
+        style = x_agent.Prediction(style_selected.numbers, style_state)
+
         predictions = {
             "lotocore": lotocore.predict(history),
             "x": champion,
@@ -68,6 +82,7 @@ def run(window: int = 100) -> pd.DataFrame:
             "x_spacing2": x_agent.predict(history, competition_gate=True, spacing_v2=True),
             "x_actionpoint": action,
             "x_reentry": reentry,
+            "x_style": style,
             "random": None,
         }
         for model, pred_obj in predictions.items():
@@ -91,7 +106,7 @@ def run(window: int = 100) -> pd.DataFrame:
 
 def summarize(results: pd.DataFrame) -> None:
     print("\n=== WALK FORWARD SUMMARY ===")
-    for model in ("lotocore","x","x_ungated","x_spacing2","x_actionpoint","x_reentry","random"):
+    for model in ("lotocore","x","x_ungated","x_spacing2","x_actionpoint","x_reentry","x_style","random"):
         g=results[results.model==model]
         print(f"{model:8s} n={len(g)} mean_hits={g.hits.mean():.4f} hit3+={(g.hits>=3).mean():.4f} best={g.hits.max()} mean_center_error={g.center_error.mean():.4f} mean_variance_error={g.variance_error.mean():.4f} hit_distribution={g.hits.value_counts().sort_index().to_dict()}")
     pivot=results.pivot(index="round",columns="model",values="hits")
@@ -105,6 +120,9 @@ def summarize(results: pd.DataFrame) -> None:
     print(f"RE-ENTRY VERSUS CHAMPION RE>Gate={(pivot.x_reentry>pivot.x).sum()} RE=Gate={(pivot.x_reentry==pivot.x).sum()} RE<Gate={(pivot.x_reentry<pivot.x).sum()}")
     re=results[results.model=="x_reentry"]
     print(f"RE-ENTRY PROBES={int(re.reentry_probe.fillna(0).sum())} OPPORTUNITIES={int(re.reentry_opportunity.fillna(0).sum())} final_evidence={re.reentry_evidence_before.dropna().iloc[-1]:.4f}")
+    print(f"STYLE VERSUS CHAMPION STYLE>Gate={(pivot.x_style>pivot.x).sum()} STYLE=Gate={(pivot.x_style==pivot.x).sum()} STYLE<Gate={(pivot.x_style<pivot.x).sum()}")
+    style=results[results.model=="x_style"]
+    print(f"STYLE FIRES={int(style.style_active.fillna(0).sum())}/{len(style)}")
 
 
 def diagnose_x(results: pd.DataFrame) -> None:
