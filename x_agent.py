@@ -187,10 +187,45 @@ def predict(
     ranked = sorted(NUMBERS, key=lambda n: (-scores[n], abs(n - target_center), n))
 
     chosen = []
+    micro_applied = False
+    micro_utility = 0.0
     target_gap = max(2.5, min(7.5, 5.0 + gap_delta * 0.35))
-    if spacing_engaged:
-        # Compose the set relationally. The fixed anti-cluster rule is removed;
-        # each next number is judged by the six-gap shape it helps create.
+    if spacing_engaged and action_point:
+        # Start from the gated Champion and make at most one local intervention.
+        champion = list(
+            predict(history, competition_gate=competition_gate).numbers
+        )
+        base_irr, base_short = _spacing_features(champion)
+        base_error = (
+            abs(base_irr - target_irregularity)
+            + abs(base_short - target_short_share)
+        )
+        best = (0.0, tuple(champion))
+        for removed in champion:
+            for added in NUMBERS:
+                if added in champion:
+                    continue
+                trial = tuple(sorted((set(champion) - {removed}) | {added}))
+                irr, short = _spacing_features(trial)
+                spacing_error = (
+                    abs(irr - target_irregularity)
+                    + abs(short - target_short_share)
+                )
+                spacing_gain = base_error - spacing_error
+                relation_cost = max(0.0, scores[removed] - scores[added])
+                utility = w_geom * spacing_gain - relation_cost
+                candidate = (utility, tuple(-n for n in trial), trial)
+                incumbent = (best[0], tuple(-n for n in best[1]), best[1])
+                if candidate > incumbent:
+                    best = (utility, trial)
+        if best[0] > 0:
+            chosen = list(best[1])
+            micro_applied = True
+            micro_utility = best[0]
+        else:
+            chosen = champion
+    elif spacing_engaged:
+        # Full Spacing v2 remains as an experimental comparison candidate.
         while len(chosen) < 7:
             candidates = []
             for n in NUMBERS:
@@ -250,6 +285,8 @@ def predict(
             "spacing_strength": round(spacing_strength, 4),
             "competition_margin": round(competition_margin, 4),
             "action_signal": round(action_signal, 4),
+            "micro_applied": int(micro_applied),
+            "micro_utility": round(micro_utility, 6),
             "volatility": round(volatility, 4),
             "w_persist": round(w_persist, 4),
             "w_reverse": round(w_reverse, 4),
