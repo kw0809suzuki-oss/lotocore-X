@@ -38,7 +38,12 @@ def run(window: int = 100) -> pd.DataFrame:
         history = df.iloc[i-window:i]
         actual = actual_numbers(df.iloc[i])
         rnd = int(df.iloc[i]["round"])
-        predictions = {"lotocore": lotocore.predict(history), "x": x_agent.predict(history), "random": None}
+        predictions = {
+            "lotocore": lotocore.predict(history),
+            "x": x_agent.predict(history, competition_gate=True),
+            "x_ungated": x_agent.predict(history, competition_gate=False),
+            "random": None,
+        }
         for model, pred_obj in predictions.items():
             if model == "random":
                 pred, state = random_prediction(rnd), {"model":"random"}
@@ -53,11 +58,12 @@ def run(window: int = 100) -> pd.DataFrame:
 
 def summarize(results: pd.DataFrame) -> None:
     print("\n=== WALK FORWARD SUMMARY ===")
-    for model in ("lotocore","x","random"):
+    for model in ("lotocore","x","x_ungated","random"):
         g=results[results.model==model]
         print(f"{model:8s} n={len(g)} mean_hits={g.hits.mean():.4f} hit3+={(g.hits>=3).mean():.4f} best={g.hits.max()} mean_center_error={g.center_error.mean():.4f} mean_variance_error={g.variance_error.mean():.4f} hit_distribution={g.hits.value_counts().sort_index().to_dict()}")
     pivot=results.pivot(index="round",columns="model",values="hits")
     print(f"PAIRED X>LotoCore={(pivot.x>pivot.lotocore).sum()} X=LotoCore={(pivot.x==pivot.lotocore).sum()} X<LotoCore={(pivot.x<pivot.lotocore).sum()} | X>Random={(pivot.x>pivot.random).sum()} X=Random={(pivot.x==pivot.random).sum()} X<Random={(pivot.x<pivot.random).sum()}")
+    print(f"GATE A/B Gate>Ungated={(pivot.x>pivot.x_ungated).sum()} Gate=Ungated={(pivot.x==pivot.x_ungated).sum()} Gate<Ungated={(pivot.x<pivot.x_ungated).sum()}")
 
 
 def diagnose_x(results: pd.DataFrame) -> None:
