@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import random
-import statistics
 from pathlib import Path
 
 import pandas as pd
@@ -25,102 +24,66 @@ def metrics(pred: tuple[int, ...], actual: tuple[int, ...]) -> dict:
     ac = sum(actual) / 7.0
     pv = sum((x - pc) ** 2 for x in pred) / 7.0
     av = sum((x - ac) ** 2 for x in actual) / 7.0
-    return {
-        "hits": hits,
-        "center_error": abs(pc - ac),
-        "variance_error": abs(pv - av),
-    }
+    return {"hits": hits, "center_error": abs(pc-ac), "variance_error": abs(pv-av)}
 
 
 def random_prediction(round_no: int) -> tuple[int, ...]:
-    rng = random.Random(round_no)
-    return tuple(sorted(rng.sample(NUMBERS, 7)))
+    return tuple(sorted(random.Random(round_no).sample(NUMBERS, 7)))
 
 
 def run(window: int = 100) -> pd.DataFrame:
-    if not DATA.exists():
-        raise SystemExit("data/loto7.csv not found; run fetch_loto7.py first")
-
     df = pd.read_csv(DATA).sort_values("round").reset_index(drop=True)
-    if len(df) <= window:
-        raise SystemExit(f"need more than {window} draws; found {len(df)}")
-
     rows = []
     for i in range(window, len(df)):
         history = df.iloc[i-window:i]
         actual = actual_numbers(df.iloc[i])
         rnd = int(df.iloc[i]["round"])
-
-        predictions = {
-            "lotocore": lotocore.predict(history),
-            "x": x_agent.predict(history),
-            "random": None,
-        }
-
+        predictions = {"lotocore": lotocore.predict(history), "x": x_agent.predict(history), "random": None}
         for model, pred_obj in predictions.items():
             if model == "random":
-                pred = random_prediction(rnd)
-                state = {"model": "random"}
+                pred, state = random_prediction(rnd), {"model":"random"}
             else:
-                pred = pred_obj.numbers
-                state = pred_obj.state
-
-            m = metrics(pred, actual)
-            row = {
-                "round": rnd,
-                "date": df.iloc[i]["date"],
-                "model": model,
-                "prediction": "-".join(map(str, pred)),
-                "actual": "-".join(map(str, actual)),
-                **m,
-            }
-            for k, v in state.items():
-                if k != "model":
-                    row[k] = v
+                pred, state = pred_obj.numbers, pred_obj.state
+            row = {"round":rnd,"date":df.iloc[i]["date"],"model":model,
+                   "prediction":"-".join(map(str,pred)),"actual":"-".join(map(str,actual)),**metrics(pred,actual)}
+            row.update({k:v for k,v in state.items() if k != "model"})
             rows.append(row)
-
     return pd.DataFrame(rows)
 
 
 def summarize(results: pd.DataFrame) -> None:
     print("\n=== WALK FORWARD SUMMARY ===")
-    for model in ("lotocore", "x", "random"):
-        g = results[results.model == model]
-        dist = g["hits"].value_counts().sort_index().to_dict()
-        print(
-            f"{model:8s} n={len(g)} mean_hits={g.hits.mean():.4f} "
-            f"hit3+={(g.hits >= 3).mean():.4f} best={g.hits.max()} "
-            f"mean_center_error={g.center_error.mean():.4f} "
-            f"mean_variance_error={g.variance_error.mean():.4f} "
-            f"hit_distribution={dist}"
-        )
+    for model in ("lotocore","x","random"):
+        g=results[results.model==model]
+        print(f"{model:8s} n={len(g)} mean_hits={g.hits.mean():.4f} hit3+={(g.hits>=3).mean():.4f} best={g.hits.max()} mean_center_error={g.center_error.mean():.4f} mean_variance_error={g.variance_error.mean():.4f} hit_distribution={g.hits.value_counts().sort_index().to_dict()}")
+    pivot=results.pivot(index="round",columns="model",values="hits")
+    print(f"PAIRED X>LotoCore={(pivot.x>pivot.lotocore).sum()} X=LotoCore={(pivot.x==pivot.lotocore).sum()} X<LotoCore={(pivot.x<pivot.lotocore).sum()} | X>Random={(pivot.x>pivot.random).sum()} X=Random={(pivot.x==pivot.random).sum()} X<Random={(pivot.x<pivot.random).sum()}")
 
-    # Paired round-by-round comparison; more meaningful than raw totals alone.
-    pivot = results.pivot(index="round", columns="model", values="hits")
-    if {"x", "lotocore", "random"}.issubset(pivot.columns):
-        print(
-            "PAIRED "
-            f"X>LotoCore={(pivot.x > pivot.lotocore).sum()} "
-            f"X=LotoCore={(pivot.x == pivot.lotocore).sum()} "
-            f"X<LotoCore={(pivot.x < pivot.lotocore).sum()} | "
-            f"X>Random={(pivot.x > pivot.random).sum()} "
-            f"X=Random={(pivot.x == pivot.random).sum()} "
-            f"X<Random={(pivot.x < pivot.random).sum()}"
-        )
+
+def diagnose_x(results: pd.DataFrame) -> None:
+    x=results[results.model=="x"].copy()
+    print("\n=== X DIAGNOSTIC ===")
+    # Does accurate Field geometry actually convert into number hits?
+    x["center_band"]=pd.qcut(x.center_error,4,labels=["best","good","poor","worst"],duplicates="drop")
+    for band,g in x.groupby("center_band",observed=True):
+        print(f"CENTER {band}: n={len(g)} mean_hits={g.hits.mean():.3f} hit3+={(g.hits>=3).mean():.3f} center_err={g.center_error.mean():.3f} var_err={g.variance_error.mean():.2f}")
+    # Which dynamic relation regime accompanies good/bad outcomes?
+    x["vol_band"]=pd.qcut(x.volatility,3,labels=["low","mid","high"],duplicates="drop")
+    for band,g in x.groupby("vol_band",observed=True):
+        print(f"VOL {band}: n={len(g)} mean_hits={g.hits.mean():.3f} hit3+={(g.hits>=3).mean():.3f} center_err={g.center_error.mean():.3f} wp={g.w_persist.mean():.3f} wr={g.w_reverse.mean():.3f} wg={g.w_gap.mean():.3f}")
+    print("TOP X rounds:")
+    for _,r in x.sort_values(["hits","center_error"],ascending=[False,True]).head(8).iterrows():
+        print(f" round={int(r['round'])} hits={int(r.hits)} center_err={r.center_error:.2f} var_err={r.variance_error:.2f} vol={r.volatility:.3f} W=({r.w_persist:.3f},{r.w_reverse:.3f},{r.w_gap:.3f}) pred={r.prediction} actual={r.actual}")
+    print("LOW-CENTER / LOW-HIT residue:")
+    residue=x[(x.center_error<=x.center_error.quantile(.25)) & (x.hits<=1)].sort_values("center_error").head(10)
+    for _,r in residue.iterrows():
+        print(f" round={int(r['round'])} hits={int(r.hits)} center_err={r.center_error:.2f} var_err={r.variance_error:.2f} vol={r.volatility:.3f} pred={r.prediction} actual={r.actual}")
 
 
 def main() -> None:
-    p = argparse.ArgumentParser()
-    p.add_argument("--window", type=int, default=100)
-    args = p.parse_args()
+    p=argparse.ArgumentParser(); p.add_argument("--window",type=int,default=100); args=p.parse_args()
+    results=run(args.window); OUT.parent.mkdir(parents=True,exist_ok=True); results.to_csv(OUT,index=False)
+    summarize(results); diagnose_x(results)
+    print(f"saved -> {OUT}"); print("LOTOCORE_X_DIAGNOSTIC_COMPLETE")
 
-    results = run(args.window)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    results.to_csv(OUT, index=False)
-    summarize(results)
-    print(f"saved -> {OUT}")
-    print("LOTOCORE_X_WALK_FORWARD_COMPLETE")
-
-
-if __name__ == "__main__":
-    main()
+if __name__=="__main__": main()
