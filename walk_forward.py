@@ -123,6 +123,10 @@ def summarize(results: pd.DataFrame) -> None:
     print(f"STYLE VERSUS CHAMPION STYLE>Gate={(pivot.x_style>pivot.x).sum()} STYLE=Gate={(pivot.x_style==pivot.x).sum()} STYLE<Gate={(pivot.x_style<pivot.x).sum()}")
     style=results[results.model=="x_style"]
     print(f"STYLE FIRES={int(style.style_active.fillna(0).sum())}/{len(style)}")
+    cutoff=int(results["round"].max())-299
+    hold=results[results["round"]<cutoff].pivot(index="round",columns="model",values="hits")
+    if len(hold):
+        print(f"STYLE PRIOR HOLDOUT n={len(hold)} STYLE>Gate={(hold.x_style>hold.x).sum()} STYLE=Gate={(hold.x_style==hold.x).sum()} STYLE<Gate={(hold.x_style<hold.x).sum()} mean_style={hold.x_style.mean():.4f} mean_gate={hold.x.mean():.4f}")
 
 
 def diagnose_x(results: pd.DataFrame) -> None:
