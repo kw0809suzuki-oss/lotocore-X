@@ -59,6 +59,7 @@ def predict(
     history: pd.DataFrame,
     competition_gate: bool = True,
     spacing_v2: bool = False,
+    action_point: bool = False,
 ) -> Prediction:
     """Dynamic Structure X for a non-intervenable Field.
 
@@ -116,10 +117,19 @@ def predict(
     target_irregularity = max(0.0, min(1.5, irr_recent + 0.25 * irr_delta))
     target_short_share = max(0.0, min(1.0, short_recent + 0.25 * short_delta))
 
-    if spacing_v2:
+    spacing_strength = min(1.0, abs(irr_delta) / 0.35 + abs(short_delta) / 0.30)
+    pre_weights = sorted((w_persist, w_reverse, w_gap, w_shape), reverse=True)
+    competition_margin = pre_weights[0] - pre_weights[1]
+    action_signal = spacing_strength * (
+        1.0 - min(1.0, competition_margin / 0.20)
+    )
+    spacing_engaged = spacing_v2 and (
+        (not action_point) or action_signal >= 0.45
+    )
+
+    if spacing_engaged:
         # A distinct local-spacing axis: no absolute-number or center signal.
-        strength = min(1.0, abs(irr_delta) / 0.35 + abs(short_delta) / 0.30)
-        w_geom = 0.08 + 0.12 * strength
+        w_geom = 0.08 + 0.12 * spacing_strength
         relation_conflict = False
         geom_active = True
     else:
@@ -158,7 +168,7 @@ def predict(
         is_outer = 1.0 if (n <= 12 or n >= 26) else 0.0
         shape = is_outer if shape_delta >= 0 else 1.0 - is_outer
 
-        if spacing_v2:
+        if spacing_engaged:
             # Pair geometry cannot be assigned honestly to an isolated number.
             geometry = 0.0
         else:
@@ -178,7 +188,7 @@ def predict(
 
     chosen = []
     target_gap = max(2.5, min(7.5, 5.0 + gap_delta * 0.35))
-    if spacing_v2:
+    if spacing_engaged:
         # Compose the set relationally. The fixed anti-cluster rule is removed;
         # each next number is judged by the six-gap shape it helps create.
         while len(chosen) < 7:
@@ -235,6 +245,11 @@ def predict(
             "target_irregularity": round(target_irregularity, 4),
             "target_short_share": round(target_short_share, 4),
             "spacing_v2": int(spacing_v2),
+            "spacing_engaged": int(spacing_engaged),
+            "action_point_mode": int(action_point),
+            "spacing_strength": round(spacing_strength, 4),
+            "competition_margin": round(competition_margin, 4),
+            "action_signal": round(action_signal, 4),
             "volatility": round(volatility, 4),
             "w_persist": round(w_persist, 4),
             "w_reverse": round(w_reverse, 4),
