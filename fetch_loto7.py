@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from io import StringIO
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -39,7 +40,7 @@ def fetch(limit: int = 180) -> pd.DataFrame:
         seen.add(url)
         r = requests.get(url, headers=headers, timeout=30)
         r.raise_for_status()
-        tables = pd.read_html(r.text)
+        tables = pd.read_html(StringIO(r.text))
         if not tables:
             raise RuntimeError(f"history table not found: {url}")
         frames.append(_clean_table(tables[0]))
