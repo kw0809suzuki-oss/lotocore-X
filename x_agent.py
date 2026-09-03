@@ -89,6 +89,13 @@ def predict(history: pd.DataFrame) -> Prediction:
     gap_delta = gap_recent - gap_before
     w_geom = 0.08 + 0.12 * min(1.0, abs(gap_delta) / 2.5)
 
+    # Competition Gate: shape and geometry currently share the same
+    # outer/center axis. If they point the same way, geometry adds no new
+    # information and is suppressed; when they conflict it remains observable.
+    geom_active = (shape_delta >= 0) != (gap_delta >= 0)
+    if not geom_active:
+        w_geom = 0.0
+
     base_scale = 1.0 - w_shape - w_geom
     if base_scale < 0.55:
         base_scale = 0.55
@@ -144,7 +151,7 @@ def predict(history: pd.DataFrame) -> Prediction:
         trial = sorted(chosen + [n])
         mean_gap = _mean_gap(trial)
         spread_ok = len(trial) <= 3 or (max(trial) - min(trial)) >= 3 * (len(trial) - 1)
-        geom_ok = len(trial) <= 3 or abs(mean_gap - target_gap) <= 2.75
+        geom_ok = (not geom_active) or len(trial) <= 3 or abs(mean_gap - target_gap) <= 2.75
         if spread_ok and geom_ok:
             chosen.append(n)
     for n in ranked:
@@ -173,5 +180,6 @@ def predict(history: pd.DataFrame) -> Prediction:
             "w_gap": round(w_gap, 4),
             "w_shape": round(w_shape, 4),
             "w_geom": round(w_geom, 4),
+            "geom_active": int(geom_active),
         },
     )
