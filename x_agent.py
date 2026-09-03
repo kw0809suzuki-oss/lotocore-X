@@ -42,7 +42,7 @@ def _mean_gap(draw):
     return sum(gaps) / len(gaps)
 
 
-def predict(history: pd.DataFrame) -> Prediction:
+def predict(history: pd.DataFrame, competition_gate: bool = True) -> Prediction:
     """Dynamic Structure X for a non-intervenable Field.
 
     Field -> Relation -> Weight -> Flow.  Shape and gap geometry relations are
@@ -92,7 +92,8 @@ def predict(history: pd.DataFrame) -> Prediction:
     # Competition Gate: shape and geometry currently share the same
     # outer/center axis. If they point the same way, geometry adds no new
     # information and is suppressed; when they conflict it remains observable.
-    geom_active = (shape_delta >= 0) != (gap_delta >= 0)
+    relation_conflict = (shape_delta >= 0) != (gap_delta >= 0)
+    geom_active = (not competition_gate) or relation_conflict
     if not geom_active:
         w_geom = 0.0
 
@@ -181,5 +182,6 @@ def predict(history: pd.DataFrame) -> Prediction:
             "w_shape": round(w_shape, 4),
             "w_geom": round(w_geom, 4),
             "geom_active": int(geom_active),
+            "competition_gate": int(competition_gate),
         },
     )
