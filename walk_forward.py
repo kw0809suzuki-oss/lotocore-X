@@ -43,6 +43,9 @@ def run(window: int = 100) -> pd.DataFrame:
             "x": x_agent.predict(history, competition_gate=True),
             "x_ungated": x_agent.predict(history, competition_gate=False),
             "x_spacing2": x_agent.predict(history, competition_gate=True, spacing_v2=True),
+            "x_actionpoint": x_agent.predict(
+                history, competition_gate=True, spacing_v2=True, action_point=True
+            ),
             "random": None,
         }
         for model, pred_obj in predictions.items():
@@ -59,13 +62,16 @@ def run(window: int = 100) -> pd.DataFrame:
 
 def summarize(results: pd.DataFrame) -> None:
     print("\n=== WALK FORWARD SUMMARY ===")
-    for model in ("lotocore","x","x_ungated","x_spacing2","random"):
+    for model in ("lotocore","x","x_ungated","x_spacing2","x_actionpoint","random"):
         g=results[results.model==model]
         print(f"{model:8s} n={len(g)} mean_hits={g.hits.mean():.4f} hit3+={(g.hits>=3).mean():.4f} best={g.hits.max()} mean_center_error={g.center_error.mean():.4f} mean_variance_error={g.variance_error.mean():.4f} hit_distribution={g.hits.value_counts().sort_index().to_dict()}")
     pivot=results.pivot(index="round",columns="model",values="hits")
     print(f"PAIRED X>LotoCore={(pivot.x>pivot.lotocore).sum()} X=LotoCore={(pivot.x==pivot.lotocore).sum()} X<LotoCore={(pivot.x<pivot.lotocore).sum()} | X>Random={(pivot.x>pivot.random).sum()} X=Random={(pivot.x==pivot.random).sum()} X<Random={(pivot.x<pivot.random).sum()}")
     print(f"GATE A/B Gate>Ungated={(pivot.x>pivot.x_ungated).sum()} Gate=Ungated={(pivot.x==pivot.x_ungated).sum()} Gate<Ungated={(pivot.x<pivot.x_ungated).sum()}")
     print(f"SPACING V2 VERSUS CHAMPION V2>Gate={(pivot.x_spacing2>pivot.x).sum()} V2=Gate={(pivot.x_spacing2==pivot.x).sum()} V2<Gate={(pivot.x_spacing2<pivot.x).sum()}")
+    print(f"ACTION POINT VERSUS CHAMPION AP>Gate={(pivot.x_actionpoint>pivot.x).sum()} AP=Gate={(pivot.x_actionpoint==pivot.x).sum()} AP<Gate={(pivot.x_actionpoint<pivot.x).sum()}")
+    ap=results[results.model=="x_actionpoint"]
+    print(f"ACTION POINT FIRES={int(ap.spacing_engaged.sum())}/{len(ap)} rate={ap.spacing_engaged.mean():.4f} signal_mean={ap.action_signal.mean():.4f}")
 
 
 def diagnose_x(results: pd.DataFrame) -> None:
