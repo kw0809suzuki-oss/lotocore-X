@@ -71,6 +71,28 @@ def diagnose_x(results: pd.DataFrame) -> None:
     x["vol_band"]=pd.qcut(x.volatility,3,labels=["low","mid","high"],duplicates="drop")
     for band,g in x.groupby("vol_band",observed=True):
         print(f"VOL {band}: n={len(g)} mean_hits={g.hits.mean():.3f} hit3+={(g.hits>=3).mean():.3f} center_err={g.center_error.mean():.3f} wp={g.w_persist.mean():.3f} wr={g.w_reverse.mean():.3f} wg={g.w_gap.mean():.3f}")
+    # Observe Relation overlap and Weight Competition without changing predictions.
+    # Shape and geometry both currently map to the outer/center axis; agreement can
+    # therefore concentrate influence while disagreement can cancel it.
+    x["shape_geom_mode"] = (
+        ((x.shape_delta >= 0) == (x.gap_delta >= 0))
+        .map({True: "aligned", False: "conflict"})
+    )
+    x["extra_weight"] = x.w_shape + x.w_geom
+    x["weight_peak"] = x[["w_persist", "w_reverse", "w_gap", "w_shape", "w_geom"]].max(axis=1)
+    print("WEIGHT COMPETITION:")
+    for mode,g in x.groupby("shape_geom_mode"):
+        print(
+            f" {mode}: n={len(g)} mean_hits={g.hits.mean():.3f} "
+            f"hit3+={(g.hits>=3).mean():.3f} center_err={g.center_error.mean():.3f} "
+            f"var_err={g.variance_error.mean():.2f} "
+            f"extra_w={g.extra_weight.mean():.3f} peak_w={g.weight_peak.mean():.3f}"
+        )
+    print(
+        f" OVERLAP paired delta: aligned-conflict "
+        f"hits={x[x.shape_geom_mode=='aligned'].hits.mean()-x[x.shape_geom_mode=='conflict'].hits.mean():+.3f} "
+        f"var_err={x[x.shape_geom_mode=='aligned'].variance_error.mean()-x[x.shape_geom_mode=='conflict'].variance_error.mean():+.2f}"
+    )
     print("TOP X rounds:")
     for _,r in x.sort_values(["hits","center_error"],ascending=[False,True]).head(8).iterrows():
         print(f" round={int(r['round'])} hits={int(r.hits)} center_err={r.center_error:.2f} var_err={r.variance_error:.2f} vol={r.volatility:.3f} W=({r.w_persist:.3f},{r.w_reverse:.3f},{r.w_gap:.3f}) pred={r.prediction} actual={r.actual}")
