@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "updated_on": "2026-09-06",
+  "origin": "介入不能FieldでLoto Core / Dynamic Structure X / Randomを同条件比較し、X固有とField依存の作用を分離して観測する。",
+  "state": {
+    "phase": "style_and_reentry_observation",
+    "status": "paused_ready_for_reentry",
+    "repository_observed": [
+      "walk_forward.pyはlotocore / x / x_ungated / x_spacing2 / x_actionpoint / x_reentry / x_style / randomを比較する",
+      "x_reentryは作用差が生じた機会にProbeまたはCutを選び、action_evidenceを次回へ渡す",
+      "x_styleはfield_spread_deltaとspacing_irregularity_deltaが同時に正の時だけexpansionを選ぶ",
+      "results/latest.csvは現時点のGitHub既定ブランチに保存されていない"
+    ],
+    "previously_observed": [
+      "初回比較でLoto Core平均hit 1.3500、hit3+ 12.0%",
+      "Run #21の直近300回比較で局所Flowが5勝0敗",
+      "spread拡大とspacing不均一度上昇の同時発生が有効な偏りとして観測された"
+    ],
+    "interpretation": [
+      "Xの流儀は固定人格ではなく、Field依存で一時的に生成される候補として扱う",
+      "Lotoで観測した構造をKaggricultureへ接続し、介入不能Fieldと介入可能Fieldを比較する"
+    ],
+    "unresolved": [
+      "Run #21の一次artifactはこのリポジトリ上で再確認できていない",
+      "局所5勝0敗が持続する効果か一時的な偏りかは未確定",
+      "次に実行する具体的な観測は未確定",
+      "リポジトリ内Stateだけで新規スレッドから復帰できるかは未検証"
+    ]
+  },
+  "decisions": [
+    "Loto CoreをChampionとして保持する",
+    "Xの局所Flowを固定戦略として確定しない",
+    "介入不能Fieldの観測結果をKaggricultureとの比較へ渡す",
+    "外部Diff Serverではなくリポジトリ内StateでRe-entryを試す"
+  ],
+  "route": [
+    ".flow/decisions.md",
+    ".flow/runs/2026-09-06-reentry-baseline.md",
+    "README.md",
+    "walk_forward.py",
+    "必要な場合のみx_agent.py / lotocore.py / 保存済み実験結果"
+  ],
+  "next_observation": "新しいスレッドでこのリポジトリを選び、『進捗を確認しよう』だけでChampion、局所Flow、一次artifact未確認、次作用未確定まで復帰できるか観測する。",
+  "do_not_assume": [
+    "Run #21の一次artifact内容",
+    "5勝0敗の一般化",
+    "次に採用する作用",
+    "リポジトリ内State方式の有効性"
+  ]
+}
