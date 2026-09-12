@@ -1,0 +1,36 @@
+name: LOTO6 Distance Runs
+
+on:
+  push:
+    paths:
+      - 'check_loto6_distance_runs.py'
+      - '.github/workflows/loto6-distance-runs.yml'
+      - 'fetch_loto6.py'
+  workflow_dispatch:
+
+jobs:
+  distance-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pandas requests lxml html5lib beautifulsoup4
+
+      - name: Fetch 400 LOTO6 draws
+        run: python fetch_loto6.py --limit 400
+
+      - name: Run distance diagnostic
+        run: python check_loto6_distance_runs.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-distance-runs
+          path: |
+            results/loto6_distance_runs_vs_random.csv
+            results/loto6_distance_runs_real.csv
