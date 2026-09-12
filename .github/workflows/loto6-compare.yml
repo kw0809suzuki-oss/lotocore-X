@@ -6,8 +6,10 @@ on:
     branches: [main]
     paths:
       - 'loto6_core.py'
+      - 'loto6_core_field.py'
       - 'loto6_x_agent.py'
       - 'walk_forward_loto6.py'
+      - 'walk_forward_loto6_field_core.py'
       - 'check_loto6_state_link.py'
       - 'fetch_loto6.py'
       - '.github/workflows/loto6-compare.yml'
@@ -28,6 +30,8 @@ jobs:
         run: python walk_forward_loto6.py --window 100
       - name: Check macro-state link against random history
         run: python check_loto6_state_link.py --window 100 --analogs 12
+      - name: Run field-only Core comparison
+        run: python walk_forward_loto6_field_core.py
       - name: Upload comparison results and raw history
         uses: actions/upload-artifact@v4
         with:
@@ -35,4 +39,5 @@ jobs:
           path: |
             results/loto6_compare.csv
             results/loto6_state_link.csv
+            results/loto6_field_core_compare.csv
             data/loto6.csv
