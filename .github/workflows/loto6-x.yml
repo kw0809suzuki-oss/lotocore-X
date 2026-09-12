@@ -1,0 +1,31 @@
+name: LOTO6 Dynamic X
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'loto6_x_agent.py'
+      - 'fetch_loto6.py'
+      - 'run_loto6_x.py'
+      - '.github/workflows/loto6-x.yml'
+
+jobs:
+  loto6-x:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO6 history
+        run: python fetch_loto6.py --limit 100
+      - name: Generate Dynamic X tickets
+        run: python run_loto6_x.py --count 15
+      - name: Upload LOTO6 X results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-x-results
+          path: results/loto6_x_tickets.csv
