@@ -24,7 +24,7 @@ jobs:
       - name: Fetch LOTO6 history
         run: python fetch_loto6.py --limit 500
       - name: Run Core X Random walk-forward
-        run: python walk_forward_loto6.py --window 100
+        run: python walk_forward_loto6.py --window 60
       - name: Upload comparison results
         uses: actions/upload-artifact@v4
         with:
