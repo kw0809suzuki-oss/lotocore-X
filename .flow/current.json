@@ -3,53 +3,54 @@
   "updated_on": "2026-09-12",
   "origin": "介入不能FieldでLoto Core / Dynamic Structure X / Randomを同条件比較し、X固有とField依存の作用を分離して観測する。",
   "state": {
-    "phase": "loto6_dynamic_x_probe",
-    "status": "run1_fixed_before_next_draw",
+    "phase": "loto6_core_x_random_comparison",
+    "status": "run2_observed",
     "repository_observed": [
       "既存LOTO7のwalk_forward.py / x_agent.pyは保持されている",
-      "LOTO6はloto6_x_agent.py / fetch_loto6.py / run_loto6_x.py / loto6-x.ymlとして独立追加された",
-      "LOTO6 Run #1は第2037回〜第2136回の100回を取得して成功した",
-      "Run #1の現在Fieldはturbulent / high / high側2回滞在として立った",
-      "Run #1は15口を生成しartifact 10296052667へ保存した"
+      "LOTO6 Dynamic X Run #1は第2037回〜第2136回の100回を取得し15口を固定した",
+      "LOTO6比較Run #2は100回履歴のうち直前60回を入力窓として残り40回を未読ウォークフォワードした",
+      "Run #2はCORE / X / Randomを同一条件で比較し成功した",
+      "Run #2 artifactは10296252451"
     ],
     "previously_observed": [
-      "初回LOTO7比較でLoto Core平均hit 1.3500、hit3+ 12.0%",
-      "Run #21の直近300回比較で局所Flowが5勝0敗",
-      "spread拡大とspacing不均一度上昇の同時発生が有効な偏りとして観測された"
+      "LOTO6 Run #1の現在Fieldはturbulent / high / high側2回滞在として立った",
+      "Run #2でCORE mean_hits=0.7750 / X=1.0500 / Random=0.7750",
+      "Run #2でXのhit3+=7.5%、best=4、COREとRandomはhit3+=0%、best=2",
+      "Run #2のペア比較はX>CORE 11 / =25 / <4、X>Random 18 / =13 / <9"
     ],
     "interpretation": [
-      "Xの流儀は固定人格ではなく、Field依存で一時的に生成される候補として扱う",
-      "LOTO6では細かい局所特徴より、粗いFieldからRelationを立てる方針を試す",
-      "GitHub X15口が会話上の仮X15口と大きく異なったため、生成経路を分離して比較できる"
+      "この40回ではXがCORE / Randomより高い一致数を示した",
+      "COREとRandomは平均一致数が同じで、今回の保守的CORE baselineには明確な差が立っていない",
+      "Xの差がField regimeとの関係から生じたかは未観測"
     ],
     "unresolved": [
-      "LOTO6のlow/mid/high閾値は暫定",
-      "turbulent判定条件は暫定",
-      "analog / persist / reverse / gap Weightは暫定",
-      "LOTO6版は旧LOTO7 x_agent.pyの完全移植ではない",
-      "Run #1の出力が次回結果とどう接続するかは未観測",
-      "CORE15口との比較で何が残るかは未確定"
+      "40回の差が持続効果か一時的偏りか",
+      "LOTO6のlow/mid/high閾値・turbulent判定・Weightの妥当性",
+      "60回窓への依存性",
+      "Xが勝った11回 / COREに負けた4回でField regime差があるか",
+      "Run #1の固定15口が次回結果とどう接続するか"
     ]
   },
   "decisions": [
-    "既存LOTO7実験を壊さずLOTO6を別系統で追加する",
-    "Run #1のGitHub X15口を次回結果を見る前の固定出力として保持する",
-    "CORE15口・会話上の仮X15口・GitHub X15口を混同しない",
-    "1回の結果から予測能力や優劣を確定しない"
+    "既存LOTO7実験を壊さずLOTO6を別系統で保持する",
+    "CORE / X / Random比較は同一履歴・同一窓で行う",
+    "Run #2の差をXの予測能力として確定しない",
+    "次観測では局所数字ではなくField regime単位で勝敗差を見る"
   ],
   "route": [
     ".flow/decisions.md",
+    ".flow/runs/2026-09-12-loto6-core-x-random-run2.md",
     ".flow/runs/2026-09-12-loto6-x-run1.md",
+    "walk_forward_loto6.py",
     "loto6_x_agent.py",
-    "run_loto6_x.py",
-    ".github/workflows/loto6-x.yml",
-    "必要な場合のみ既存LOTO7のx_agent.py / walk_forward.py / lotocore.py"
+    "loto6_core.py",
+    ".github/workflows/loto6-compare.yml"
   ],
-  "next_observation": "次回LOTO6結果開示後、CORE15口とGitHub X Run #1の15口を生成経路ごとに分離し、Field / 候補集合 / 組合せのどこで接続または断絶したかを観測する。",
+  "next_observation": "Run #2のX>CORE 11回 / X<CORE 4回をField regime単位で束ね、差がturbulent / quiet / one_side_stayのどこで立ったかを見る。数字個別の後付け分析には進まない。",
   "do_not_assume": [
+    "XがCOREまたはRandomより一般に優れていること",
+    "40回の差の再現性",
     "LOTO6版閾値・Weightの妥当性",
-    "GitHub X15口の予測能力",
-    "COREよりXが優れていること",
-    "1回の一致または不一致の一般化"
+    "一致数差が未来予測能力を意味すること"
   ]
 }
