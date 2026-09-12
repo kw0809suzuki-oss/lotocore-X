@@ -19,16 +19,16 @@ def main() -> None:
     df = pd.read_csv(DATA).sort_values("round").reset_index(drop=True)
     tickets, state = loto6_x_agent.generate_tickets(df, count=args.count)
 
-    print("=== LOTO6 DYNAMIC X ===")
+    print("=== LOTO6 DYNAMIC X / BREATHING FIELD ===")
     print(f"latest_round={int(df.iloc[-1]['round'])}")
     for key in (
-        "field_regime",
-        "field_band",
-        "field_bands",
-        "field_mean_abs_move",
-        "field_reversals",
-        "field_stay_high",
-        "field_stay_low",
+        "field_breathing",
+        "field_side",
+        "field_center",
+        "field_position",
+        "field_prior_amplitude",
+        "field_recent_amplitude",
+        "field_amplitude_delta",
         "analog_count",
         "w_analog",
         "w_persist",
