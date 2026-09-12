@@ -29,31 +29,45 @@ def _variance(draw: list[int] | tuple[int, ...]) -> float:
     return sum((x - m) ** 2 for x in draw) / len(draw)
 
 
+def _block_amplitudes(centers: list[float], block: int = 10) -> list[float]:
+    usable = len(centers) - (len(centers) % block)
+    centers = centers[-usable:]
+    return [
+        max(centers[i:i + block]) - min(centers[i:i + block])
+        for i in range(0, usable, block)
+    ]
+
+
 def _field_features(draws: list[list[int]]) -> dict:
-    """Observe LOTO6 as a large breathing motion around its center.
+    """Observe LOTO6 as a broad breathing motion around a stable center.
 
-    The upper Field is intentionally coarse: expansion / contraction / neutral.
-    High/low position is retained only as a secondary coordinate, not the regime itself.
+    The upper Field is intentionally coarse. We compare 10-draw amplitude blocks
+    and read whether the breathing is expanding, contracting, or neutral.
+    High/low position remains only a secondary coordinate.
     """
-    recent = draws[-10:]
-    centers = [_mean(d) for d in recent]
-    moves = [centers[i] - centers[i - 1] for i in range(1, len(centers))]
+    all_centers = [_mean(d) for d in draws]
+    block_amps = _block_amplitudes(all_centers, block=10)
+    recent_amps = block_amps[-4:]
 
-    recent_amp = max(centers[-5:]) - min(centers[-5:])
-    prior_amp = max(centers[:5]) - min(centers[:5])
-    amp_delta = recent_amp - prior_amp
-
-    # Soft direction: avoid forcing every small change into a state transition.
-    if amp_delta >= 3.0:
-        breathing = "expanding"
-    elif amp_delta <= -3.0:
-        breathing = "contracting"
+    if len(recent_amps) >= 3:
+        net3 = recent_amps[-1] - recent_amps[-3]
+        last_step = recent_amps[-1] - recent_amps[-2]
+        if net3 >= 3.0 and last_step >= -1.0:
+            breathing = "expanding"
+        elif net3 <= -3.0 and last_step <= 1.0:
+            breathing = "contracting"
+        else:
+            breathing = "neutral"
     else:
         breathing = "neutral"
 
-    long_centers = [_mean(d) for d in draws[-60:]]
+    recent_amp = recent_amps[-1] if recent_amps else 0.0
+    prior_amp = recent_amps[-2] if len(recent_amps) >= 2 else recent_amp
+    amp_delta = recent_amp - prior_amp
+
+    long_centers = all_centers[-60:]
     field_center = sum(long_centers) / len(long_centers)
-    position = centers[-1] - field_center
+    position = all_centers[-1] - field_center
     if position >= 4.0:
         side = "upper"
     elif position <= -4.0:
@@ -62,8 +76,7 @@ def _field_features(draws: list[list[int]]) -> dict:
         side = "center"
 
     return {
-        "centers": centers,
-        "moves": moves,
+        "block_amplitudes": recent_amps,
         "prior_amplitude": prior_amp,
         "recent_amplitude": recent_amp,
         "amplitude_delta": amp_delta,
@@ -75,9 +88,9 @@ def _field_features(draws: list[list[int]]) -> dict:
 
 
 def _analog_next_draws(draws: list[list[int]], features: dict, limit: int = 12) -> list[list[int]]:
-    """Find prior states with a similar large-scale breathing relation."""
+    """Find prior states with a similar broad breathing relation."""
     matches: list[tuple[float, list[int]]] = []
-    for end in range(30, len(draws) - 1):
+    for end in range(40, len(draws) - 1):
         f = _field_features(draws[:end])
         score = 0.0
         if f["breathing"] == features["breathing"]:
@@ -85,7 +98,6 @@ def _analog_next_draws(draws: list[list[int]], features: dict, limit: int = 12) 
         if f["side"] == features["side"]:
             score += 1.5
         score -= abs(f["recent_amplitude"] - features["recent_amplitude"]) / 10.0
-        score -= abs(f["amplitude_delta"] - features["amplitude_delta"]) / 12.0
         if score > 2.5:
             matches.append((score, draws[end]))
 
@@ -95,8 +107,8 @@ def _analog_next_draws(draws: list[list[int]], features: dict, limit: int = 12) 
 
 def score_candidates(history: pd.DataFrame) -> tuple[dict[int, float], dict]:
     draws = _draws(history)
-    if len(draws) < 30:
-        raise ValueError("LOTO6 X requires at least 30 historical draws")
+    if len(draws) < 40:
+        raise ValueError("LOTO6 X requires at least 40 historical draws")
 
     features = _field_features(draws)
     analogs = _analog_next_draws(draws, features)
@@ -113,7 +125,6 @@ def score_candidates(history: pd.DataFrame) -> tuple[dict[int, float], dict]:
             if gap[n] == len(draws):
                 gap[n] = g
 
-    # Weight changes follow the large breathing state, not a high/low prediction rule.
     if features["breathing"] == "expanding":
         w_analog, w_persist, w_reverse, w_gap = 0.50, 0.15, 0.20, 0.15
     elif features["breathing"] == "contracting":
@@ -141,6 +152,7 @@ def score_candidates(history: pd.DataFrame) -> tuple[dict[int, float], dict]:
         "field_side": features["side"],
         "field_center": round(features["field_center"], 4),
         "field_position": round(features["position"], 4),
+        "field_block_amplitudes": "->".join(f"{v:.4f}" for v in features["block_amplitudes"]),
         "field_prior_amplitude": round(features["prior_amplitude"], 4),
         "field_recent_amplitude": round(features["recent_amplitude"], 4),
         "field_amplitude_delta": round(features["amplitude_delta"], 4),
