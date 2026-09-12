@@ -11,6 +11,7 @@ on:
       - 'walk_forward_loto6.py'
       - 'walk_forward_loto6_field_core.py'
       - 'check_loto6_state_link.py'
+      - 'check_loto6_updown_transition.py'
       - 'fetch_loto6.py'
       - '.github/workflows/loto6-compare.yml'
 
@@ -32,6 +33,8 @@ jobs:
         run: python check_loto6_state_link.py --window 100 --analogs 12
       - name: Run field-only Core comparison
         run: python walk_forward_loto6_field_core.py
+      - name: Check coarse up-down transition structure
+        run: python check_loto6_updown_transition.py
       - name: Upload comparison results and raw history
         uses: actions/upload-artifact@v4
         with:
@@ -40,4 +43,5 @@ jobs:
             results/loto6_compare.csv
             results/loto6_state_link.csv
             results/loto6_field_core_compare.csv
+            results/loto6_updown_transition.csv
             data/loto6.csv
