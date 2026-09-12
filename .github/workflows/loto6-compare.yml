@@ -8,6 +8,7 @@ on:
       - 'loto6_core.py'
       - 'loto6_x_agent.py'
       - 'walk_forward_loto6.py'
+      - 'check_loto6_state_link.py'
       - 'fetch_loto6.py'
       - '.github/workflows/loto6-compare.yml'
 
@@ -25,10 +26,13 @@ jobs:
         run: python fetch_loto6.py --limit 200
       - name: Run 100-draw holdout comparison
         run: python walk_forward_loto6.py --window 100
+      - name: Check macro-state link against random history
+        run: python check_loto6_state_link.py --window 100 --analogs 12
       - name: Upload comparison results and raw history
         uses: actions/upload-artifact@v4
         with:
           name: loto6-core-x-random-100-holdout
           path: |
             results/loto6_compare.csv
+            results/loto6_state_link.csv
             data/loto6.csv
