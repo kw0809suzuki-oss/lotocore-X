@@ -1,0 +1,32 @@
+name: LOTO6 Core X Random Compare
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'loto6_core.py'
+      - 'loto6_x_agent.py'
+      - 'walk_forward_loto6.py'
+      - 'fetch_loto6.py'
+      - '.github/workflows/loto6-compare.yml'
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO6 history
+        run: python fetch_loto6.py --limit 500
+      - name: Run Core X Random walk-forward
+        run: python walk_forward_loto6.py --window 100
+      - name: Upload comparison results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-core-x-random-results
+          path: results/loto6_compare.csv
