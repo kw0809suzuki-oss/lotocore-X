@@ -1,0 +1,30 @@
+name: LOTO6 Coarse Real vs Random
+
+on:
+  push:
+    paths:
+      - 'check_loto6_coarse_vs_random.py'
+      - '.github/workflows/loto6-coarse-vs-random.yml'
+  workflow_dispatch:
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch 400 LOTO6 draws
+        run: python fetch_loto6.py --limit 400
+      - name: Compare real coarse field with random
+        run: python check_loto6_coarse_vs_random.py
+      - name: Upload comparison result
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-coarse-vs-random
+          path: |
+            results/loto6_coarse_vs_random.csv
+            data/loto6.csv
