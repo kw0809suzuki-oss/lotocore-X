@@ -1,0 +1,32 @@
+name: LOTO6 UpDown 400 Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'fetch_loto6.py'
+      - 'check_loto6_updown_transition.py'
+      - '.github/workflows/loto6-updown-400.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch 400 LOTO6 draws
+        run: python fetch_loto6.py --limit 400
+      - name: Check four 100-draw up-down blocks
+        run: python check_loto6_updown_transition.py
+      - name: Upload coarse transition result
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-updown-400
+          path: |
+            results/loto6_updown_transition.csv
+            data/loto6.csv
