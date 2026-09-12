@@ -10,6 +10,8 @@ import requests
 URLS = [
     "https://www.luckydayloto.com/loto6/datatable/winningnumber-table.html",
     "https://www.luckydayloto.com/loto6/datatable/winningnumber-table-page2.html",
+    "https://www.luckydayloto.com/loto6/datatable/winningnumber-table-page3.html",
+    "https://www.luckydayloto.com/loto6/datatable/winningnumber-table-page4.html",
 ]
 OUT = Path("data/loto6.csv")
 
