@@ -7,7 +7,7 @@ import pandas as pd
 
 DATA = Path("data/loto6.csv")
 OUT = Path("results/loto6_updown_transition.csv")
-WINDOW = 100
+BLOCK = 100
 CENTER = 22.0
 DRAW_SIZE = 6
 
@@ -26,9 +26,7 @@ def side(center: float) -> str | None:
 
 def analyze_block(df: pd.DataFrame, label: str) -> tuple[list[dict], dict]:
     df = df.reset_index(drop=True)
-    seq = []
-    for _, row in df.iterrows():
-        seq.append(side(draw_center(row)))
+    seq = [side(draw_center(row)) for _, row in df.iterrows()]
 
     exact_center = sum(s is None for s in seq)
     side_counts = Counter(s for s in seq if s is not None)
@@ -84,14 +82,16 @@ def analyze_block(df: pd.DataFrame, label: str) -> tuple[list[dict], dict]:
 
 
 def main() -> None:
-    df = pd.read_csv(DATA).sort_values("round").tail(WINDOW * 2).reset_index(drop=True)
-    if len(df) < WINDOW * 2:
-        raise ValueError(f"need {WINDOW * 2} draws, got {len(df)}")
+    df = pd.read_csv(DATA).sort_values("round").reset_index(drop=True)
+    full_blocks = len(df) // BLOCK
+    if full_blocks < 2:
+        raise ValueError(f"need at least {BLOCK * 2} draws, got {len(df)}")
 
-    blocks = [
-        (df.iloc[:WINDOW], "older100"),
-        (df.iloc[WINDOW:], "recent100"),
-    ]
+    df = df.tail(full_blocks * BLOCK).reset_index(drop=True)
+    blocks = []
+    for i in range(full_blocks):
+        block_df = df.iloc[i * BLOCK : (i + 1) * BLOCK]
+        blocks.append((block_df, f"block{i + 1}"))
 
     all_rows = []
     metas = []
@@ -104,19 +104,32 @@ def main() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(OUT, index=False)
 
-    print("=== LOTO6 UP/DOWN TRANSITION CHECK: TWO 100-DRAW BLOCKS ===")
+    print(f"=== LOTO6 UP/DOWN TRANSITION CHECK: {full_blocks} x 100-DRAW BLOCKS ===")
+    total_du_n = 0
+    total_du_up = 0
+    total_du_down = 0
     for meta in metas:
         print(
             f"[{meta['label']}] rounds={meta['round_start']}..{meta['round_end']} "
             f"U:{meta['U']} D:{meta['D']} exact_center_skipped:{meta['exact_center']} "
             f"valid_triples={meta['valid_triples']} baselineU={meta['baseline_up']:.4f}"
         )
-        for r in [x for x in all_rows if x['block'] == meta['label']]:
+        block_rows = [x for x in all_rows if x["block"] == meta["label"]]
+        for r in block_rows:
             print(
                 f"  {r['transition']} n={r['n']} nextU={r['next_up']} nextD={r['next_down']} "
                 f"up_rate={r['next_up_rate']:.4f} lift={r['up_lift_vs_baseline']}"
             )
+            if r["transition"] == "D->U":
+                total_du_n += r["n"]
+                total_du_up += r["next_up"]
+                total_du_down += r["next_down"]
 
+    pooled_rate = total_du_up / total_du_n if total_du_n else 0.0
+    print(
+        f"POOLED D->U: n={total_du_n} nextU={total_du_up} nextD={total_du_down} "
+        f"up_rate={pooled_rate:.4f}"
+    )
     print(f"saved -> {OUT}")
     print("LOTO6_UPDOWN_TRANSITION_COMPLETE")
 
