@@ -7,7 +7,10 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-URL = "https://www.luckydayloto.com/loto6/datatable/winningnumber-table.html"
+URLS = [
+    "https://www.luckydayloto.com/loto6/datatable/winningnumber-table.html",
+    "https://www.luckydayloto.com/loto6/datatable/winningnumber-table-page2.html",
+]
 OUT = Path("data/loto6.csv")
 
 
@@ -36,21 +39,31 @@ def _clean_table(df: pd.DataFrame) -> pd.DataFrame | None:
     return out
 
 
-def fetch(limit: int = 100) -> pd.DataFrame:
+def _fetch_page(url: str) -> list[pd.DataFrame]:
     headers = {"User-Agent": "lotocore-X research experiment"}
-    r = requests.get(URL, headers=headers, timeout=30)
+    r = requests.get(url, headers=headers, timeout=30)
     r.raise_for_status()
     tables = pd.read_html(StringIO(r.text))
-
     candidates: list[pd.DataFrame] = []
     for table in tables:
         cleaned = _clean_table(table)
         if cleaned is not None and len(cleaned) >= 20:
             candidates.append(cleaned)
+    return candidates
+
+
+def fetch(limit: int = 100) -> pd.DataFrame:
+    candidates: list[pd.DataFrame] = []
+    for url in URLS:
+        candidates.extend(_fetch_page(url))
+        merged = pd.concat(candidates, ignore_index=True).drop_duplicates("round") if candidates else pd.DataFrame()
+        if len(merged) >= limit:
+            break
+
     if not candidates:
         raise RuntimeError("LOTO6 history table not found")
 
-    data = max(candidates, key=len).drop_duplicates("round")
+    data = pd.concat(candidates, ignore_index=True).drop_duplicates("round")
     data = data.sort_values("round").tail(limit).reset_index(drop=True)
     return data
 
