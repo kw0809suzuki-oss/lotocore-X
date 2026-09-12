@@ -1,0 +1,30 @@
+name: Random-kun LOTO6
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'random_kun.py'
+      - 'fetch_loto6.py'
+      - '.github/workflows/random-kun.yml'
+
+jobs:
+  walk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch 400 LOTO6 draws
+        run: python fetch_loto6.py --limit 400
+      - name: Let Random-kun walk
+        run: python random_kun.py --seed 20260913
+      - name: Upload Random-kun result
+        uses: actions/upload-artifact@v4
+        with:
+          name: random-kun-loto6
+          path: results/random_kun_loto6.csv
