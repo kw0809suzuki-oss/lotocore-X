@@ -24,25 +24,17 @@ def side(center: float) -> str | None:
     return None
 
 
-def main() -> None:
-    df = pd.read_csv(DATA).sort_values("round").tail(WINDOW).reset_index(drop=True)
-    if len(df) < WINDOW:
-        raise ValueError(f"need {WINDOW} draws, got {len(df)}")
-
+def analyze_block(df: pd.DataFrame, label: str) -> tuple[list[dict], dict]:
+    df = df.reset_index(drop=True)
     seq = []
-    rows = []
     for _, row in df.iterrows():
-        c = draw_center(row)
-        s = side(c)
-        seq.append(s)
-        rows.append({"round": int(row["round"]), "center": round(c, 4), "side": s or "CENTER"})
+        seq.append(side(draw_center(row)))
 
     exact_center = sum(s is None for s in seq)
     side_counts = Counter(s for s in seq if s is not None)
-
     transition_next: dict[str, Counter] = defaultdict(Counter)
-    valid_triples = 0
     next_counts = Counter()
+    valid_triples = 0
 
     for i in range(2, len(seq)):
         a, b, c = seq[i - 2], seq[i - 1], seq[i]
@@ -56,14 +48,17 @@ def main() -> None:
     baseline_up = next_counts["U"] / valid_triples if valid_triples else 0.0
     baseline_down = next_counts["D"] / valid_triples if valid_triples else 0.0
 
-    summary_rows = []
+    rows = []
     for key in ("D->D", "D->U", "U->D", "U->U"):
         counts = transition_next[key]
         n = counts["U"] + counts["D"]
         up_rate = counts["U"] / n if n else 0.0
         down_rate = counts["D"] / n if n else 0.0
-        summary_rows.append(
+        rows.append(
             {
+                "block": label,
+                "round_start": int(df.iloc[0]["round"]),
+                "round_end": int(df.iloc[-1]["round"]),
                 "transition": key,
                 "n": n,
                 "next_up": counts["U"],
@@ -74,19 +69,54 @@ def main() -> None:
             }
         )
 
-    out = pd.DataFrame(summary_rows)
+    meta = {
+        "label": label,
+        "round_start": int(df.iloc[0]["round"]),
+        "round_end": int(df.iloc[-1]["round"]),
+        "U": side_counts["U"],
+        "D": side_counts["D"],
+        "exact_center": exact_center,
+        "valid_triples": valid_triples,
+        "baseline_up": baseline_up,
+        "baseline_down": baseline_down,
+    }
+    return rows, meta
+
+
+def main() -> None:
+    df = pd.read_csv(DATA).sort_values("round").tail(WINDOW * 2).reset_index(drop=True)
+    if len(df) < WINDOW * 2:
+        raise ValueError(f"need {WINDOW * 2} draws, got {len(df)}")
+
+    blocks = [
+        (df.iloc[:WINDOW], "older100"),
+        (df.iloc[WINDOW:], "recent100"),
+    ]
+
+    all_rows = []
+    metas = []
+    for block_df, label in blocks:
+        rows, meta = analyze_block(block_df, label)
+        all_rows.extend(rows)
+        metas.append(meta)
+
+    out = pd.DataFrame(all_rows)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(OUT, index=False)
 
-    print("=== LOTO6 UP/DOWN TRANSITION CHECK ===")
-    print(f"window={WINDOW} rounds={int(df.iloc[0]['round'])}..{int(df.iloc[-1]['round'])}")
-    print(f"side_counts=U:{side_counts['U']} D:{side_counts['D']} exact_center_skipped:{exact_center}")
-    print(f"valid_triples={valid_triples} baseline_next=U:{baseline_up:.4f} D:{baseline_down:.4f}")
-    for r in summary_rows:
+    print("=== LOTO6 UP/DOWN TRANSITION CHECK: TWO 100-DRAW BLOCKS ===")
+    for meta in metas:
         print(
-            f"{r['transition']} n={r['n']} nextU={r['next_up']} nextD={r['next_down']} "
-            f"up_rate={r['next_up_rate']:.4f} lift={r['up_lift_vs_baseline']}"
+            f"[{meta['label']}] rounds={meta['round_start']}..{meta['round_end']} "
+            f"U:{meta['U']} D:{meta['D']} exact_center_skipped:{meta['exact_center']} "
+            f"valid_triples={meta['valid_triples']} baselineU={meta['baseline_up']:.4f}"
         )
+        for r in [x for x in all_rows if x['block'] == meta['label']]:
+            print(
+                f"  {r['transition']} n={r['n']} nextU={r['next_up']} nextD={r['next_down']} "
+                f"up_rate={r['next_up_rate']:.4f} lift={r['up_lift_vs_baseline']}"
+            )
+
     print(f"saved -> {OUT}")
     print("LOTO6_UPDOWN_TRANSITION_COMPLETE")
 
