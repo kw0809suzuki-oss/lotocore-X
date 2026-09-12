@@ -1,0 +1,28 @@
+name: LOTO6 Shape Direction Bundles
+
+on:
+  push:
+    paths:
+      - 'check_loto6_shape_direction.py'
+      - '.github/workflows/loto6-shape-direction.yml'
+  workflow_dispatch:
+
+jobs:
+  shape-direction:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pandas requests lxml html5lib beautifulsoup4
+      - name: Fetch 400 LOTO6 draws
+        run: python fetch_loto6.py --limit 400
+      - name: Run shape-direction bundle diagnostic
+        run: python check_loto6_shape_direction.py
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-shape-direction-bundles
+          path: results/loto6_shape_direction_vs_shuffle.csv
