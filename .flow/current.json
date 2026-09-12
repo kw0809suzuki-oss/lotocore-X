@@ -1,50 +1,55 @@
 {
   "schema_version": 1,
-  "updated_on": "2026-09-06",
+  "updated_on": "2026-09-12",
   "origin": "介入不能FieldでLoto Core / Dynamic Structure X / Randomを同条件比較し、X固有とField依存の作用を分離して観測する。",
   "state": {
-    "phase": "style_and_reentry_observation",
-    "status": "paused_ready_for_reentry",
+    "phase": "loto6_dynamic_x_probe",
+    "status": "run1_fixed_before_next_draw",
     "repository_observed": [
-      "walk_forward.pyはlotocore / x / x_ungated / x_spacing2 / x_actionpoint / x_reentry / x_style / randomを比較する",
-      "x_reentryは作用差が生じた機会にProbeまたはCutを選び、action_evidenceを次回へ渡す",
-      "x_styleはfield_spread_deltaとspacing_irregularity_deltaが同時に正の時だけexpansionを選ぶ",
-      "results/latest.csvは現時点のGitHub既定ブランチに保存されていない"
+      "既存LOTO7のwalk_forward.py / x_agent.pyは保持されている",
+      "LOTO6はloto6_x_agent.py / fetch_loto6.py / run_loto6_x.py / loto6-x.ymlとして独立追加された",
+      "LOTO6 Run #1は第2037回〜第2136回の100回を取得して成功した",
+      "Run #1の現在Fieldはturbulent / high / high側2回滞在として立った",
+      "Run #1は15口を生成しartifact 10296052667へ保存した"
     ],
     "previously_observed": [
-      "初回比較でLoto Core平均hit 1.3500、hit3+ 12.0%",
+      "初回LOTO7比較でLoto Core平均hit 1.3500、hit3+ 12.0%",
       "Run #21の直近300回比較で局所Flowが5勝0敗",
       "spread拡大とspacing不均一度上昇の同時発生が有効な偏りとして観測された"
     ],
     "interpretation": [
       "Xの流儀は固定人格ではなく、Field依存で一時的に生成される候補として扱う",
-      "Lotoで観測した構造をKaggricultureへ接続し、介入不能Fieldと介入可能Fieldを比較する"
+      "LOTO6では細かい局所特徴より、粗いFieldからRelationを立てる方針を試す",
+      "GitHub X15口が会話上の仮X15口と大きく異なったため、生成経路を分離して比較できる"
     ],
     "unresolved": [
-      "Run #21の一次artifactはこのリポジトリ上で再確認できていない",
-      "局所5勝0敗が持続する効果か一時的な偏りかは未確定",
-      "次に実行する具体的な観測は未確定",
-      "リポジトリ内Stateだけで新規スレッドから復帰できるかは未検証"
+      "LOTO6のlow/mid/high閾値は暫定",
+      "turbulent判定条件は暫定",
+      "analog / persist / reverse / gap Weightは暫定",
+      "LOTO6版は旧LOTO7 x_agent.pyの完全移植ではない",
+      "Run #1の出力が次回結果とどう接続するかは未観測",
+      "CORE15口との比較で何が残るかは未確定"
     ]
   },
   "decisions": [
-    "Loto CoreをChampionとして保持する",
-    "Xの局所Flowを固定戦略として確定しない",
-    "介入不能Fieldの観測結果をKaggricultureとの比較へ渡す",
-    "外部Diff Serverではなくリポジトリ内StateでRe-entryを試す"
+    "既存LOTO7実験を壊さずLOTO6を別系統で追加する",
+    "Run #1のGitHub X15口を次回結果を見る前の固定出力として保持する",
+    "CORE15口・会話上の仮X15口・GitHub X15口を混同しない",
+    "1回の結果から予測能力や優劣を確定しない"
   ],
   "route": [
     ".flow/decisions.md",
-    ".flow/runs/2026-09-06-reentry-baseline.md",
-    "README.md",
-    "walk_forward.py",
-    "必要な場合のみx_agent.py / lotocore.py / 保存済み実験結果"
+    ".flow/runs/2026-09-12-loto6-x-run1.md",
+    "loto6_x_agent.py",
+    "run_loto6_x.py",
+    ".github/workflows/loto6-x.yml",
+    "必要な場合のみ既存LOTO7のx_agent.py / walk_forward.py / lotocore.py"
   ],
-  "next_observation": "新しいスレッドでこのリポジトリを選び、『進捗を確認しよう』だけでChampion、局所Flow、一次artifact未確認、次作用未確定まで復帰できるか観測する。",
+  "next_observation": "次回LOTO6結果開示後、CORE15口とGitHub X Run #1の15口を生成経路ごとに分離し、Field / 候補集合 / 組合せのどこで接続または断絶したかを観測する。",
   "do_not_assume": [
-    "Run #21の一次artifact内容",
-    "5勝0敗の一般化",
-    "次に採用する作用",
-    "リポジトリ内State方式の有効性"
+    "LOTO6版閾値・Weightの妥当性",
+    "GitHub X15口の予測能力",
+    "COREよりXが優れていること",
+    "1回の一致または不一致の一般化"
   ]
 }
