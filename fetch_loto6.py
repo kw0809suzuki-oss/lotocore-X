@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import time
 from io import StringIO
 from pathlib import Path
 
@@ -43,15 +44,32 @@ def _clean_table(df: pd.DataFrame) -> pd.DataFrame | None:
 
 def _fetch_page(url: str) -> list[pd.DataFrame]:
     headers = {"User-Agent": "lotocore-X research experiment"}
-    r = requests.get(url, headers=headers, timeout=30)
-    r.raise_for_status()
-    tables = pd.read_html(StringIO(r.text))
-    candidates: list[pd.DataFrame] = []
-    for table in tables:
-        cleaned = _clean_table(table)
-        if cleaned is not None and len(cleaned) >= 20:
-            candidates.append(cleaned)
-    return candidates
+    candidates_url = [url]
+    alt = url.replace("www.luckydayloto.com", "luckydayloto.com")
+    if alt != url:
+        candidates_url.append(alt)
+
+    last_error: Exception | None = None
+    for candidate_url in candidates_url:
+        for attempt in range(3):
+            try:
+                r = requests.get(candidate_url, headers=headers, timeout=20)
+                r.raise_for_status()
+                tables = pd.read_html(StringIO(r.text))
+                candidates: list[pd.DataFrame] = []
+                for table in tables:
+                    cleaned = _clean_table(table)
+                    if cleaned is not None and len(cleaned) >= 20:
+                        candidates.append(cleaned)
+                return candidates
+            except requests.RequestException as exc:
+                last_error = exc
+                if attempt < 2:
+                    time.sleep(2 * (attempt + 1))
+
+    if last_error is not None:
+        raise last_error
+    return []
 
 
 def fetch(limit: int = 100) -> pd.DataFrame:
