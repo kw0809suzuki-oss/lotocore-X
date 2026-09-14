@@ -12,7 +12,6 @@ import x_agent
 
 DATA = Path("data/loto7.csv")
 OUT = Path("results/loto7_mesh_compare.csv")
-NUMBERS = tuple(range(1, 38))
 MODELS = (
     "lotocore",
     "x",
@@ -39,20 +38,12 @@ def model_predictions(history) -> dict[str, tuple[int, ...]]:
 
 
 def make_degrees(preds: dict[str, tuple[int, ...]], total_slots: int = 140) -> Counter:
-    # Treat the existing model outputs as candidate material only.
-    # More model agreement => more appearances in the finite 20-ticket fold.
     base = Counter()
     for name in MODELS:
         base.update(preds[name])
-
-    if not base:
-        return Counter({n: 1 for n in range(1, 8)})
-
     raw = {n: total_slots * c / sum(base.values()) for n, c in base.items()}
     deg = {n: min(20, int(v)) for n, v in raw.items()}
     used = sum(deg.values())
-
-    # Largest-remainder fill, respecting max one appearance per ticket.
     order = sorted(base, key=lambda n: (raw[n] - int(raw[n]), base[n], -n), reverse=True)
     while used < total_slots:
         changed = False
@@ -65,8 +56,6 @@ def make_degrees(preds: dict[str, tuple[int, ...]], total_slots: int = 140) -> C
                     break
         if not changed:
             break
-
-    # If rounding overshoots (normally impossible here), trim weakest remainder first.
     while used > total_slots:
         for n in reversed(order):
             if deg[n] > 0:
@@ -74,61 +63,63 @@ def make_degrees(preds: dict[str, tuple[int, ...]], total_slots: int = 140) -> C
                 used -= 1
                 if used == total_slots:
                     break
-
     return Counter(deg)
+
+
+def choose_feasible_ticket(remaining: Counter, tickets_left: int, rng: random.Random, pair_count=None) -> tuple[int, ...]:
+    mandatory = [n for n, c in remaining.items() if c == tickets_left]
+    if len(mandatory) > 7:
+        raise RuntimeError("infeasible degree sequence: too many mandatory nodes")
+    chosen = list(mandatory)
+    while len(chosen) < 7:
+        candidates = [n for n, c in remaining.items() if c > 0 and n not in chosen]
+        if not candidates:
+            raise RuntimeError("infeasible degree sequence: not enough distinct candidates")
+        if pair_count is None:
+            weights = [remaining[n] for n in candidates]
+            total = sum(weights)
+            r = rng.uniform(0, total)
+            acc = 0.0
+            pick = candidates[-1]
+            for n, w in zip(candidates, weights):
+                acc += w
+                if r <= acc:
+                    pick = n
+                    break
+        else:
+            rng.shuffle(candidates)
+            def score(n: int):
+                pair_penalty = sum(pair_count[tuple(sorted((n, x)))] for x in chosen)
+                return (pair_penalty, -remaining[n], n)
+            pick = min(candidates, key=score)
+        chosen.append(pick)
+    for n in chosen:
+        remaining[n] -= 1
+    return tuple(sorted(chosen))
 
 
 def random_pack(degrees: Counter, seed: int) -> list[tuple[int, ...]]:
     rng = random.Random(seed)
     remaining = Counter(degrees)
-    tickets: list[tuple[int, ...]] = []
-    for _ in range(20):
-        available = [n for n, c in remaining.items() if c > 0]
-        weights = [remaining[n] for n in available]
-        chosen = []
-        for _ in range(7):
-            total = sum(weights)
-            r = rng.uniform(0, total)
-            acc = 0.0
-            idx = 0
-            for idx, w in enumerate(weights):
-                acc += w
-                if r <= acc:
-                    break
-            n = available.pop(idx)
-            weights.pop(idx)
-            chosen.append(n)
-            remaining[n] -= 1
-        tickets.append(tuple(sorted(chosen)))
+    tickets = []
+    for ticket_index in range(20):
+        tickets_left = 20 - ticket_index
+        tickets.append(choose_feasible_ticket(remaining, tickets_left, rng))
     return tickets
 
 
 def broad_mesh_pack(degrees: Counter, seed: int) -> list[tuple[int, ...]]:
-    # Greedy broad mesh: preserve exactly the same node degrees while minimizing
-    # repeated pair connections. This is deliberately coarse: observe only whether
-    # layout itself moves the result distribution.
     rng = random.Random(seed)
     remaining = Counter(degrees)
     pair_count: defaultdict[tuple[int, int], int] = defaultdict(int)
-    tickets: list[tuple[int, ...]] = []
-
-    for _ in range(20):
-        ticket: list[int] = []
-        for _ in range(7):
-            candidates = [n for n, c in remaining.items() if c > 0 and n not in ticket]
-            rng.shuffle(candidates)
-            def score(n: int):
-                pair_penalty = sum(pair_count[tuple(sorted((n, x)))] for x in ticket)
-                # Use remaining demand as a feasibility tie-breaker.
-                return (pair_penalty, -remaining[n], n)
-            n = min(candidates, key=score)
-            ticket.append(n)
-            remaining[n] -= 1
-        ticket = sorted(ticket)
+    tickets = []
+    for ticket_index in range(20):
+        tickets_left = 20 - ticket_index
+        ticket = choose_feasible_ticket(remaining, tickets_left, rng, pair_count)
         for i in range(7):
             for j in range(i + 1, 7):
                 pair_count[(ticket[i], ticket[j])] += 1
-        tickets.append(tuple(ticket))
+        tickets.append(ticket)
     return tickets
 
 
@@ -156,12 +147,10 @@ def run(window: int = 100) -> pd.DataFrame:
         actual = actual_numbers(row)
         preds = model_predictions(history)
         degrees = make_degrees(preds)
-
         random_tickets = random_pack(degrees, seed=rnd * 1009 + 17)
         mesh_tickets = broad_mesh_pack(degrees, seed=rnd * 1009 + 17)
         rh = max_hits(random_tickets, actual)
         mh = max_hits(mesh_tickets, actual)
-
         rows.append({
             "round": rnd,
             "date": row["date"],
