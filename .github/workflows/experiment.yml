@@ -19,8 +19,12 @@ jobs:
         run: python fetch_loto7.py --limit 700
       - name: Run walk-forward comparison
         run: python walk_forward.py --window 100
+      - name: Run coarse Random vs Mesh observation
+        run: python compare_loto7_mesh.py --window 100
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: lotocore-x-results
-          path: results/latest.csv
+          path: |
+            results/latest.csv
+            results/loto7_mesh_compare.csv
