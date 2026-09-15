@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 import lotocore
@@ -59,8 +60,10 @@ def print_segment(label: str, part: pd.DataFrame) -> None:
     rates = group_rates(part)
     residue_vs_core = rates["both"] - rates["core_only"]
     residue_vs_x = rates["both"] - rates["x_only"]
+    first_round = int(part.iloc[0]["round"])
+    last_round = int(part.iloc[-1]["round"])
     print(
-        f"SEGMENT {label}: n={len(part)} rounds={int(part.iloc[0].round)}..{int(part.iloc[-1].round)} "
+        f"SEGMENT {label}: n={len(part)} rounds={first_round}..{last_round} "
         f"both={rates['both']:.6f} core_only={rates['core_only']:.6f} x_only={rates['x_only']:.6f} "
         f"residue_vs_core={residue_vs_core:+.6f} residue_vs_x={residue_vs_x:+.6f}"
     )
@@ -80,16 +83,9 @@ def summarize(res: pd.DataFrame) -> None:
     print_segment("first_half", res.iloc[:mid])
     print_segment("second_half", res.iloc[mid:])
 
-    # Six chronological blocks: enough to see whether the sign persists without
-    # inventing a tuned threshold or selecting favorable periods afterward.
-    for idx, part in enumerate(pd.np.array_split(res, 6) if hasattr(pd, 'np') else [], start=1):
-        print_segment(f"block_{idx}", part)
-
-    # pandas 3 removed pd.np; use positional blocks explicitly.
-    import numpy as np
-    for idx, indices in enumerate(np.array_split(range(len(res)), 6), start=1):
-        part = res.iloc[list(indices)]
-        print_segment(f"sixth_{idx}", part)
+    # Fixed chronological sixths. No favorable-period selection and no tuned threshold.
+    for idx, indices in enumerate(np.array_split(np.arange(len(res)), 6), start=1):
+        print_segment(f"sixth_{idx}", res.iloc[indices])
 
     print(
         "actual_in_union_mean="
