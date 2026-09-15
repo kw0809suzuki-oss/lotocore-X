@@ -21,6 +21,8 @@ jobs:
         run: python walk_forward.py --window 100
       - name: Run coarse Random vs Mesh observation
         run: python compare_loto7_mesh.py --window 100
+      - name: Observe CORE-X candidate relation
+        run: python observe_loto7_core_x_relation.py
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
@@ -28,3 +30,4 @@ jobs:
           path: |
             results/latest.csv
             results/loto7_mesh_compare.csv
+            results/loto7_core_x_relation.csv
