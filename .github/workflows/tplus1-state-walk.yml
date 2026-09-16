@@ -23,6 +23,8 @@ jobs:
         run: python playground/tplus1-time-imagination/g1_history_walk.py
       - name: Glance after wide-open states
         run: python playground/tplus1-time-imagination/g2_open_afterglance.py
+      - name: Glance at matching entry shapes
+        run: python playground/tplus1-time-imagination/g3_entry_match.py
       - name: Upload observation
         uses: actions/upload-artifact@v4
         with:
