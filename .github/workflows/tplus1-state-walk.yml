@@ -1,0 +1,28 @@
+name: T+1 State Walk Playground
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'playground/tplus1-time-imagination/**'
+      - '.github/workflows/tplus1-state-walk.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install history dependencies
+        run: pip install pandas requests beautifulsoup4 lxml
+      - name: Fetch recent verified LOTO7 history
+        run: python fetch_loto7.py --limit 180
+      - name: Observe T+1 state walk
+        run: python playground/tplus1-time-imagination/g1_history_walk.py
+      - name: Upload observation
+        uses: actions/upload-artifact@v4
+        with:
+          name: tplus1-state-walk
+          path: playground/tplus1-time-imagination/output/
