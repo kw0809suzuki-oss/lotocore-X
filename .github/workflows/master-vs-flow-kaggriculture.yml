@@ -1,0 +1,25 @@
+name: Master vs Flow Kaggriculture One Shot
+on:
+  push:
+    branches: [play/master-vs-flow-kaggriculture]
+    paths:
+      - 'playground/master-vs-flow-kaggriculture/**'
+      - '.github/workflows/master-vs-flow-kaggriculture.yml'
+  workflow_dispatch:
+jobs:
+  one-shot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install kaggle-environments==1.32.4
+      - name: Run frozen one-shot
+        run: python playground/master-vs-flow-kaggriculture/run_real_one_shot.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: master-vs-flow-one-shot
+          path: |
+            playground/master-vs-flow-kaggriculture/real_one_shot_result.json
+            playground/master-vs-flow-kaggriculture/real_one_shot_replay.json
