@@ -21,6 +21,8 @@ jobs:
         run: python fetch_loto7.py --limit 180
       - name: Observe T+1 state walk
         run: python playground/tplus1-time-imagination/g1_history_walk.py
+      - name: Glance after wide-open states
+        run: python playground/tplus1-time-imagination/g2_open_afterglance.py
       - name: Upload observation
         uses: actions/upload-artifact@v4
         with:
