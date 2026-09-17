@@ -25,6 +25,8 @@ jobs:
         run: python playground/tplus1-time-imagination/g2_open_afterglance.py
       - name: Glance at matching entry shapes
         run: python playground/tplus1-time-imagination/g3_entry_match.py
+      - name: Evaluate vNext Claim / Boundary walk
+        run: python playground/tplus1-time-imagination/vnext_claim_walk.py
       - name: Upload observation
         uses: actions/upload-artifact@v4
         with:
