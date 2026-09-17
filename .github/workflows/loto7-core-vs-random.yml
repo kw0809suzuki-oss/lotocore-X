@@ -1,0 +1,28 @@
+name: LOTO7 Core vs Uniform Random
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'compare_loto7_core_uniform_random.py'
+      - '.github/workflows/loto7-core-vs-random.yml'
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Compare Core with ordinary uniform random
+        run: python compare_loto7_core_uniform_random.py --window 100 --random-reps 1000
+      - name: Upload comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-core-vs-uniform-random
+          path: results/loto7_core_vs_uniform_random.csv
