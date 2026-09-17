@@ -1,0 +1,18 @@
+name: LOTO7 Residual Play
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'playground/loto7-residual-play/**'
+      - '.github/workflows/loto7-residual-play.yml'
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas requests beautifulsoup4 lxml
+      - name: Observe residuals over full available LOTO7 history
+        run: python playground/loto7-residual-play/residual_walk.py
