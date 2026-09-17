@@ -15,4 +15,6 @@ jobs:
           python-version: '3.12'
       - run: pip install pandas requests beautifulsoup4 lxml
       - name: Observe residuals over full available LOTO7 history
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: python playground/loto7-residual-play/residual_walk.py
