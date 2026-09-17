@@ -22,3 +22,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: python playground/loto7-residual-play/inventory.py
+      - name: Observe five transitions before each strong residual
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python playground/loto7-residual-play/pre_residual.py
