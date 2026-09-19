@@ -1,0 +1,29 @@
+name: LOTO7 Candidate Compression Phase 2 Fixed-K
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'coverage_lab/fixed_k_curve.py'
+      - 'lotocore.py'
+      - 'x_agent.py'
+      - 'fetch_loto7.py'
+      - '.github/workflows/candidate-compression-phase2.yml'
+
+jobs:
+  fixed-k:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run fixed-K candidate compression curve
+        run: python coverage_lab/fixed_k_curve.py --data data/loto7.csv --window 100
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-compression-phase2-fixed-k
+          path: results/loto7_candidate_compression_fixed_k.csv
