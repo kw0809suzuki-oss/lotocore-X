@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LOTO7 Candidate Compression Round Packet",
+  "type": "object",
+  "required": [
+    "round",
+    "history_end_round",
+    "model",
+    "model_version",
+    "pre_draw",
+    "scores",
+    "ranks",
+    "relations"
+  ],
+  "properties": {
+    "round": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "date": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "history_end_round": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "model": {
+      "type": "string",
+      "enum": [
+        "lotocore",
+        "x",
+        "x_variant",
+        "combined"
+      ]
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "pre_draw": {
+      "const": true
+    },
+    "scores": {
+      "type": "object",
+      "minProperties": 37,
+      "maxProperties": 37,
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "ranks": {
+      "type": "object",
+      "minProperties": 37,
+      "maxProperties": 37,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 37
+      }
+    },
+    "relations": {
+      "type": "object",
+      "properties": {
+        "core_x_both": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 37
+          },
+          "uniqueItems": true
+        },
+        "core_only": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 37
+          },
+          "uniqueItems": true
+        },
+        "x_only": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 37
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "state": {
+      "type": "object"
+    },
+    "actual": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 37
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true
+    }
+  },
+  "description": "Pre-draw canonical packet for Candidate Compression experiments. actual may be attached only after the packet has been frozen."
+}
