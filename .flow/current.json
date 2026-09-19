@@ -1,56 +1,61 @@
 {
   "schema_version": 1,
-  "updated_on": "2026-09-12",
+  "updated_on": "2026-09-19",
   "origin": "介入不能FieldでLoto Core / Dynamic Structure X / Randomを同条件比較し、X固有とField依存の作用を分離して観測する。",
   "state": {
-    "phase": "loto6_core_x_random_comparison",
-    "status": "run2_observed",
+    "phase": "loto7_phase10_practical_10ticket",
+    "status": "ticket_level_strict_forward_observed",
     "repository_observed": [
-      "既存LOTO7のwalk_forward.py / x_agent.pyは保持されている",
-      "LOTO6 Dynamic X Run #1は第2037回〜第2136回の100回を取得し15口を固定した",
-      "LOTO6比較Run #2は100回履歴のうち直前60回を入力窓として残り40回を未読ウォークフォワードした",
-      "Run #2はCORE / X / Randomを同一条件で比較し成功した",
-      "Run #2 artifactは10296252451"
+      "LOTO7履歴は第1回〜第695回をWebから取得可能",
+      "Candidate Compression Phase 1〜9は保持され、Phase 9 strict-forward run 35435885208はsuccess",
+      "Phase 10 practical 10-ticket run 35436356162はsuccess",
+      "Phase 10は435評価回で毎回10口を本数字+ボーナス数字の1〜6等条件へ通した",
+      "Phase 10 artifactは10581444441"
     ],
     "previously_observed": [
-      "LOTO6 Run #1の現在Fieldはturbulent / high / high側2回滞在として立った",
-      "Run #2でCORE mean_hits=0.7750 / X=1.0500 / Random=0.7750",
-      "Run #2でXのhit3+=7.5%、best=4、COREとRandomはhit3+=0%、best=2",
-      "Run #2のペア比較はX>CORE 11 / =25 / <4、X>Random 18 / =13 / <9"
+      "Phase 9でX last1 K10はadaptive hit lift 1.0433、same-K random 1.0000、差+0.0433",
+      "Phase 10 adaptive X last1 K10は購入額1,305,000円、当せんあり回率28.28%、無当せん71.72%",
+      "Phase 10 adaptiveは4等10口 / 5等94口 / 6等105口、1〜3等0口",
+      "Phase 10 adaptiveの公式理論値換算gross 327,600円 / return 25.10%",
+      "fixed K10は3等1口が発生し理論値換算return 84.03%だが単一高額イベント依存",
+      "same-K randomの理論値換算return 13.55%、uniform random ticketsは15.20%"
     ],
     "interpretation": [
-      "この40回ではXがCORE / Randomより高い一致数を示した",
-      "COREとRandomは平均一致数が同じで、今回の保守的CORE baselineには明確な差が立っていない",
-      "Xの差がField regimeとの関係から生じたかは未観測"
+      "Xのcandidate-layer圧縮情報は10口券面へ接続してもsame-K randomとの差が一部残った",
+      "adaptiveはsame-K randomより4+頻度と理論値換算returnが高かった",
+      "一方で継続購入の収益性を支持する結果ではなく、adaptiveの理論値換算returnは25.1%に留まった",
+      "fixed K10の高い金額換算は1回の3等に強く依存し、安定した優位とは扱わない"
     ],
     "unresolved": [
-      "40回の差が持続効果か一時的偏りか",
-      "LOTO6のlow/mid/high閾値・turbulent判定・Weightの妥当性",
-      "60回窓への依存性",
-      "Xが勝った11回 / COREに負けた4回でField regime差があるか",
-      "Run #1の固定15口が次回結果とどう接続するか"
+      "第696回pre-draw固定10口が次回結果でどう観測されるか",
+      "random controlsを複数seed/分布で再評価した場合もticket-level差が残るか",
+      "実際の各回当せん金を使ったhistorical payoutで理論値換算との差がどの程度出るか",
+      "allocator自体の寄与とX ranking/pool寄与の分離"
+    ],
+    "parallel_preserved": [
+      "LOTO6 Dynamic X / CORE / Random系は既存.flow記録と実装を保持し、今回のLOTO7 Phase 10へ混同しない"
     ]
   },
   "decisions": [
-    "既存LOTO7実験を壊さずLOTO6を別系統で保持する",
-    "CORE / X / Random比較は同一履歴・同一窓で行う",
-    "Run #2の差をXの予測能力として確定しない",
-    "次観測では局所数字ではなくField regime単位で勝敗差を見る"
+    "Phase 10主候補はX / last1 / K10として開始前に固定した",
+    "10口×300円を実購入単位として比較した",
+    "当せん条件は本数字+ボーナス数字の公式1〜6等条件を使った",
+    "金額換算は実当せん金ではなく公式理論値/代表値として別扱いする",
+    "Phase 10結果から購入利益や将来当選優位を確定しない"
   ],
   "route": [
     ".flow/decisions.md",
-    ".flow/runs/2026-09-12-loto6-core-x-random-run2.md",
-    ".flow/runs/2026-09-12-loto6-x-run1.md",
-    "walk_forward_loto6.py",
-    "loto6_x_agent.py",
-    "loto6_core.py",
-    ".github/workflows/loto6-compare.yml"
+    ".flow/runs/2026-09-19-loto7-phase10-practical-10ticket.md",
+    "coverage_lab/practical_10ticket_backtest.py",
+    "coverage_lab/adaptive_k_strict_forward.py",
+    ".github/workflows/candidate-compression-phase10.yml",
+    ".github/workflows/candidate-compression-phase9.yml"
   ],
-  "next_observation": "Run #2のX>CORE 11回 / X<CORE 4回をField regime単位で束ね、差がturbulent / quiet / one_side_stayのどこで立ったかを見る。数字個別の後付け分析には進まない。",
+  "next_observation": "第695回までの履歴だけを使って第696回向け10口をpre-draw固定し、Phase 10の実践プロファイルと一緒に保存する。結果開示後はその固定10口だけを観測する。",
   "do_not_assume": [
-    "XがCOREまたはRandomより一般に優れていること",
-    "40回の差の再現性",
-    "LOTO6版閾値・Weightの妥当性",
-    "一致数差が未来予測能力を意味すること"
+    "adaptive Xが利益を出すこと",
+    "fixed K10の3等1口が再現すること",
+    "理論値換算returnが実際の払戻率を意味すること",
+    "Phase 10の差が未来予測能力を意味すること"
   ]
 }
