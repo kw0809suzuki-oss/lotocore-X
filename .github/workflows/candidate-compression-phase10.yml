@@ -1,4 +1,4 @@
-name: LOTO7 Candidate Compression Phase 10 Practical 10-Ticket Backtest
+# Phase 10 practical ticket-level evidence\nname: LOTO7 Candidate Compression Phase 10 Practical 10-Ticket Backtest
 
 on:
   workflow_dispatch:
