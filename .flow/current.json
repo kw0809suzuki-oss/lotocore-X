@@ -34,7 +34,113 @@
     ],
     "parallel_preserved": [
       "LOTO6 Dynamic X / CORE / Random系は既存.flow記録と実装を保持し、今回のLOTO7 Phase 10へ混同しない"
-    ]
+    ],
+    "predraw_snapshot": {
+      "history_end_round": 695,
+      "target_round": 696,
+      "workflow_run": 35436519585,
+      "artifact_id": 10581444620,
+      "fresh": true,
+      "gate_mean_diff": 0.2304,
+      "metric": "field_center_abs",
+      "metric_value": 0.178571,
+      "state_bin": "low",
+      "selected_k": 37,
+      "cost_yen": 3000,
+      "tickets": [
+        [
+          2,
+          6,
+          9,
+          10,
+          12,
+          32,
+          35
+        ],
+        [
+          8,
+          12,
+          26,
+          27,
+          28,
+          29,
+          31
+        ],
+        [
+          1,
+          4,
+          7,
+          11,
+          20,
+          28,
+          32
+        ],
+        [
+          1,
+          3,
+          12,
+          30,
+          33,
+          36,
+          37
+        ],
+        [
+          3,
+          5,
+          8,
+          18,
+          19,
+          22,
+          32
+        ],
+        [
+          2,
+          4,
+          23,
+          24,
+          26,
+          34,
+          36
+        ],
+        [
+          7,
+          10,
+          15,
+          16,
+          21,
+          25,
+          31
+        ],
+        [
+          6,
+          8,
+          9,
+          13,
+          14,
+          17,
+          28
+        ],
+        [
+          6,
+          10,
+          11,
+          20,
+          26,
+          29,
+          35
+        ],
+        [
+          2,
+          9,
+          12,
+          27,
+          31,
+          32,
+          35
+        ]
+      ],
+      "drive_snapshot_id": "1yxoGpcySWUQzVMDLAj9ibUtQKI0S0G7rkaP0W72sVLA"
+    }
   },
   "decisions": [
     "Phase 10主候補はX / last1 / K10として開始前に固定した",
@@ -46,12 +152,12 @@
   "route": [
     ".flow/decisions.md",
     ".flow/runs/2026-09-19-loto7-phase10-practical-10ticket.md",
+    "coverage_lab/current_10ticket_snapshot.py",
     "coverage_lab/practical_10ticket_backtest.py",
-    "coverage_lab/adaptive_k_strict_forward.py",
-    ".github/workflows/candidate-compression-phase10.yml",
-    ".github/workflows/candidate-compression-phase9.yml"
+    ".github/workflows/loto7-phase10-next-snapshot.yml",
+    ".github/workflows/candidate-compression-phase10.yml"
   ],
-  "next_observation": "第695回までの履歴だけを使って第696回向け10口をpre-draw固定し、Phase 10の実践プロファイルと一緒に保存する。結果開示後はその固定10口だけを観測する。",
+  "next_observation": "第696回結果公開後、pre-draw固定済み10口だけを本数字・ボーナス数字へ照合する。券・K・rule・allocatorを結果後に変更しない。",
   "do_not_assume": [
     "adaptive Xが利益を出すこと",
     "fixed K10の3等1口が再現すること",
