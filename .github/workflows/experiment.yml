@@ -23,6 +23,21 @@ jobs:
         run: python compare_loto7_mesh.py --window 100
       - name: Observe CORE-X candidate relation
         run: python observe_loto7_core_x_relation.py
+      - name: Regression guard for score snapshots
+        run: python coverage_lab/regression_check.py --data data/loto7.csv --window 100 --last-n 20
+      - name: Generate frozen Round Packets
+        run: python coverage_lab/generate_round_packets.py --data data/loto7.csv --window 100 --last-n 20 --out coverage_lab/packets
+      - name: Validate generated Round Packets
+        shell: bash
+        run: |
+          set -e
+          count=0
+          for f in coverage_lab/packets/round_*_*.json; do
+            python coverage_lab/validate_round_packet.py "$f"
+            count=$((count+1))
+          done
+          echo "validated_packets=$count"
+          test "$count" -eq 40
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
@@ -31,3 +46,4 @@ jobs:
             results/latest.csv
             results/loto7_mesh_compare.csv
             results/loto7_core_x_relation.csv
+            coverage_lab/packets/
