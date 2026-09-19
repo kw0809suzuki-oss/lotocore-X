@@ -75,7 +75,7 @@ def attach_bins(obs:pd.DataFrame):
     out=[]
     for model,m in obs.groupby("model"):
         m=m.sort_values("round").reset_index(drop=True)
-        metric_cols=[c for c in m.columns if c not in ("round","model")]
+        metric_cols=[c for c in m.columns if c not in ("round","model") and m[c].notna().any()]
         for metric in metric_cols:
             vals=m[metric]
             bins=[]
