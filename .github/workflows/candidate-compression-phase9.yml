@@ -1,0 +1,38 @@
+name: LOTO7 Candidate Compression Phase 9 Adaptive K Strict Forward
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'coverage_lab/adaptive_k_strict_forward.py'
+      - 'coverage_lab/state_observables.py'
+      - 'coverage_lab/fixed_k_curve.py'
+      - 'lotocore.py'
+      - 'x_agent.py'
+      - 'fetch_loto7.py'
+      - '.github/workflows/candidate-compression-phase9.yml'
+
+jobs:
+  adaptive-k:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Build fixed-K curve
+        run: python coverage_lab/fixed_k_curve.py --data data/loto7.csv --window 100
+      - name: Build state observations
+        run: python coverage_lab/state_observables.py --data data/loto7.csv --curve results/loto7_candidate_compression_fixed_k.csv --window 100
+      - name: Adaptive K strict forward
+        run: python coverage_lab/adaptive_k_strict_forward.py --input results/loto7_candidate_compression_state_observables.csv --history-window 60 --step 20 --random-reps 2000 --seed 20260919
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-compression-phase9-adaptive-k-strict-forward
+          path: |
+            results/loto7_candidate_compression_fixed_k.csv
+            results/loto7_candidate_compression_state_observables.csv
+            results/loto7_candidate_compression_adaptive_k_strict_forward.csv
