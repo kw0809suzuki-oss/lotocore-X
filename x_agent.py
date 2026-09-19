@@ -297,3 +297,160 @@ def predict(
             "competition_gate": int(competition_gate),
         },
     )
+
+
+def score_snapshot(
+    history: pd.DataFrame,
+    competition_gate: bool = True,
+    spacing_v2: bool = False,
+    action_point: bool = False,
+) -> dict:
+    """Observation-only full 1..37 score/rank snapshot.
+
+    This mirrors the pre-selection score construction used by predict() and
+    does not modify predict() behavior. For spacing_v2/action_point, the
+    snapshot still records the isolated-number score vector before any
+    pair-geometry intervention.
+    """
+    draws = _draws(history)
+    if len(draws) < 20:
+        raise ValueError("X requires at least 20 historical draws")
+
+    recent = draws[-12:]
+    prev = draws[-24:-12] if len(draws) >= 24 else draws[:-12]
+    f_recent = Counter(n for d in recent for n in d)
+    f_prev = Counter(n for d in prev for n in d)
+
+    centers = [_mean(d) for d in recent]
+    spreads = [_variance(d) for d in recent]
+    center_now = sum(centers[-4:]) / 4.0
+    center_before = sum(centers[:4]) / 4.0
+    center_delta = center_now - center_before
+    spread_now = sum(spreads[-4:]) / 4.0
+    spread_before = sum(spreads[:4]) / 4.0
+    spread_delta = spread_now - spread_before
+
+    volatility = min(1.0, (abs(center_delta) / 5.0 + abs(spread_delta) / 35.0) / 2.0)
+    w_persist = 0.50 * (1.0 - volatility) + 0.15
+    w_reverse = 0.20 + 0.45 * volatility
+    w_gap = 1.0 - w_persist - w_reverse
+    if w_gap < 0.10:
+        w_gap = 0.10
+        total = w_persist + w_reverse + w_gap
+        w_persist, w_reverse, w_gap = [x / total for x in (w_persist, w_reverse, w_gap)]
+
+    outer_recent = _outer_share(recent[-4:])
+    outer_before = _outer_share(recent[:4])
+    shape_delta = outer_recent - outer_before
+    w_shape = 0.12 + 0.18 * min(1.0, abs(shape_delta) / 0.35)
+
+    gap_recent = sum(_mean_gap(d) for d in recent[-4:]) / 4.0
+    gap_before = sum(_mean_gap(d) for d in recent[:4]) / 4.0
+    gap_delta = gap_recent - gap_before
+
+    recent_features = [_spacing_features(d) for d in recent[-4:]]
+    before_features = [_spacing_features(d) for d in recent[:4]]
+    irr_recent = sum(v[0] for v in recent_features) / 4.0
+    irr_before = sum(v[0] for v in before_features) / 4.0
+    short_recent = sum(v[1] for v in recent_features) / 4.0
+    short_before = sum(v[1] for v in before_features) / 4.0
+    irr_delta = irr_recent - irr_before
+    short_delta = short_recent - short_before
+    target_irregularity = max(0.0, min(1.5, irr_recent + 0.25 * irr_delta))
+    target_short_share = max(0.0, min(1.0, short_recent + 0.25 * short_delta))
+
+    spacing_strength = min(1.0, abs(irr_delta) / 0.35 + abs(short_delta) / 0.30)
+    pre_weights = sorted((w_persist, w_reverse, w_gap, w_shape), reverse=True)
+    competition_margin = pre_weights[0] - pre_weights[1]
+    action_signal = spacing_strength * (
+        1.0 - min(1.0, competition_margin / 0.20)
+    )
+    spacing_engaged = spacing_v2 and (
+        (not action_point) or action_signal >= 0.45
+    )
+
+    if spacing_engaged:
+        w_geom = 0.08 + 0.12 * spacing_strength
+        relation_conflict = False
+        geom_active = True
+    else:
+        w_geom = 0.08 + 0.12 * min(1.0, abs(gap_delta) / 2.5)
+        relation_conflict = (shape_delta >= 0) != (gap_delta >= 0)
+        geom_active = (not competition_gate) or relation_conflict
+        if not geom_active:
+            w_geom = 0.0
+
+    base_scale = 1.0 - w_shape - w_geom
+    if base_scale < 0.55:
+        base_scale = 0.55
+        total_extra = w_shape + w_geom
+        if total_extra > 0:
+            extra_scale = (1.0 - base_scale) / total_extra
+            w_shape *= extra_scale
+            w_geom *= extra_scale
+    w_persist *= base_scale
+    w_reverse *= base_scale
+    w_gap *= base_scale
+
+    gap = {n: len(draws) for n in NUMBERS}
+    for g, d in enumerate(reversed(draws)):
+        for n in d:
+            if gap[n] == len(draws):
+                gap[n] = g
+
+    scores = {}
+    for n in NUMBERS:
+        persist = f_recent[n] / max(1, len(recent))
+        trend = persist - (f_prev[n] / max(1, len(prev)))
+        reversal = max(0.0, -trend)
+        gap_pressure = min(gap[n], 16) / 16.0
+
+        is_outer = 1.0 if (n <= 12 or n >= 26) else 0.0
+        shape = is_outer if shape_delta >= 0 else 1.0 - is_outer
+
+        if spacing_engaged:
+            geometry = 0.0
+        else:
+            dist_center = abs(n - 19.0) / 18.0
+            geometry = dist_center if gap_delta >= 0 else 1.0 - dist_center
+
+        scores[n] = (
+            w_persist * persist
+            + w_reverse * reversal
+            + w_gap * gap_pressure
+            + w_shape * shape
+            + w_geom * geometry
+        )
+
+    target_center = 19.0 + max(-3.0, min(3.0, center_delta * 0.35))
+    ranked = sorted(NUMBERS, key=lambda n: (-scores[n], abs(n - target_center), n))
+    ranks = {n: i + 1 for i, n in enumerate(ranked)}
+
+    return {
+        "scores": {str(n): float(scores[n]) for n in NUMBERS},
+        "ranks": {str(n): int(ranks[n]) for n in NUMBERS},
+        "state": {
+            "model": "x",
+            "snapshot_kind": "pre_selection_score",
+            "competition_gate": int(competition_gate),
+            "spacing_v2": int(spacing_v2),
+            "action_point_mode": int(action_point),
+            "spacing_engaged": int(spacing_engaged),
+            "target_center": round(target_center, 6),
+            "field_center_delta": round(center_delta, 6),
+            "field_spread_delta": round(spread_delta, 6),
+            "shape_delta": round(shape_delta, 6),
+            "gap_delta": round(gap_delta, 6),
+            "spacing_irregularity_delta": round(irr_delta, 6),
+            "spacing_short_delta": round(short_delta, 6),
+            "spacing_strength": round(spacing_strength, 6),
+            "competition_margin": round(competition_margin, 6),
+            "action_signal": round(action_signal, 6),
+            "w_persist": round(w_persist, 6),
+            "w_reverse": round(w_reverse, 6),
+            "w_gap": round(w_gap, 6),
+            "w_shape": round(w_shape, 6),
+            "w_geom": round(w_geom, 6),
+            "geom_active": int(geom_active),
+        },
+    }
