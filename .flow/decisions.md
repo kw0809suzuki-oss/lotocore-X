@@ -36,3 +36,13 @@
 - Run #1の15口は次回結果を見る前の固定出力として保持する。
 - CORE15口・会話上の仮X15口・GitHub X15口を混同せず、生成経路ごとに分離して観測する。
 - 閾値・Weight・analog類似度は暫定。1回の結果から予測能力や優劣を確定しない。
+
+## 2026-09-19｜LOTO7 Phase 10 実購入シミュレーション
+
+- Phase 9 strict-forwardの次Probeとして、候補層liftではなく10口の券面結果へ接続する。
+- Phase 10の主候補は、Phase 9でsame-K random差が最も大きかった X / last1 / K10 に固定する。これはPhase 10用の比較候補であり、Champion昇格ではない。
+- 各回10口、1口300円（1回3,000円）を実購入単位として扱う。
+- 当せん判定は本数字7個・ボーナス数字2個を使い、ロト7の1〜6等条件にそのまま通す。
+- 比較枝は adaptive X last1 K10 / fixed X K10 / fixed X K37 / same-K random / uniform random tickets。
+- 券面allocatorは既存 compare_loto7_mesh.py のdegree-preserving / pair-dispersion思想を再利用し、結果開示後に券を組み替えない。
+- 賞金額は回ごとに変動するため、一次判定は等級発生数・本数字最大一致・無当せん率を主指標とする。金額換算を出す場合は公式理論値として別扱いする。
