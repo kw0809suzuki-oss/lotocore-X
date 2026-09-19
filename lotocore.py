@@ -65,3 +65,45 @@ def predict(history: pd.DataFrame) -> Prediction:
             "top_score": round(scores[ranked[0]], 6),
         },
     )
+
+
+def score_snapshot(history: pd.DataFrame) -> dict:
+    """Observation-only full 1..37 score/rank snapshot.
+
+    This does not change predict(); it exposes the same pre-selection score
+    construction for Candidate Compression experiments.
+    """
+    draws = _draws(history)
+    if len(draws) < 10:
+        raise ValueError("Loto Core requires at least 10 historical draws")
+
+    long = draws[-100:]
+    recent = draws[-20:]
+    freq_long = Counter(n for d in long for n in d)
+    freq_recent = Counter(n for d in recent for n in d)
+
+    gap = {n: len(draws) for n in NUMBERS}
+    for g, d in enumerate(reversed(draws), start=0):
+        for n in d:
+            if gap[n] == len(draws):
+                gap[n] = g
+
+    scores = {}
+    for n in NUMBERS:
+        scores[n] = (
+            0.60 * freq_long[n] / max(1, len(long))
+            + 0.25 * freq_recent[n] / max(1, len(recent))
+            + 0.15 * min(gap[n], 12) / 12.0
+        )
+
+    ranked = sorted(NUMBERS, key=lambda n: (-scores[n], n))
+    ranks = {n: i + 1 for i, n in enumerate(ranked)}
+    return {
+        "scores": {str(n): float(scores[n]) for n in NUMBERS},
+        "ranks": {str(n): int(ranks[n]) for n in NUMBERS},
+        "state": {
+            "model": "lotocore",
+            "snapshot_kind": "pre_selection_score",
+            "top7_by_score": list(ranked[:7]),
+        },
+    }
