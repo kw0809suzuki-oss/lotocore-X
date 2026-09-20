@@ -76,6 +76,26 @@ def main():
     seed = next_round * 100_003 + 20260919 + 1
     tickets = ranked_bundle(pool, seed)
 
+    ticket_membership = {n: [] for n in range(1, 38)}
+    for i, ticket in enumerate(tickets, 1):
+        for n in ticket:
+            ticket_membership[n].append(i)
+
+    candidate_trace = []
+    for n in ranked:
+        comp = snap.get("components", {}).get(str(n), {})
+        candidate_trace.append({
+            "number": n,
+            "rank": ranks[n],
+            "score": round(float(snap["scores"][str(n)]), 8),
+            "in_selected_pool": n in pool,
+            "ticket_count": len(ticket_membership[n]),
+            "ticket_ids": ticket_membership[n],
+            "score_components": {
+                k: round(float(v), 8) for k, v in comp.items()
+            },
+        })
+
     payload = {
         "snapshot_type": "pre_draw_fixed",
         "history_end_round": int(df["round"].max()),
@@ -93,6 +113,25 @@ def main():
         "state_bin": state_bin,
         "selected_k": selected_k,
         "candidate_pool": pool,
+        "decision_trace": {
+            "freshness_gate": {
+                "rule": "last1",
+                "gate_mean_diff": round(float(diff), 6),
+                "fresh": fresh,
+            },
+            "state_gate": {
+                "metric": METRIC,
+                "value": round(metric_value, 8),
+                "prior100_q1": round(q1, 8),
+                "prior100_q2": round(q2, 8),
+                "state_bin": state_bin,
+            },
+            "compression_gate": {
+                "rule": "K10 only when fresh AND state=high; otherwise K37",
+                "selected_k": selected_k,
+            },
+        },
+        "candidate_trace": candidate_trace,
         "ticket_count": 10,
         "price_per_ticket_yen": 300,
         "total_cost_yen": 3000,
@@ -101,6 +140,7 @@ def main():
             "Generated only from history through round 695 (or current history_end_round).",
             "No future draw result is used.",
             "This is a fixed research snapshot, not a profit guarantee.",
+            "candidate_trace is a contemporaneous computation trace, not a post-result explanation.",
         ],
     }
 
