@@ -159,6 +159,7 @@ def predict(
                 gap[n] = g
 
     scores = {}
+    score_components = {}
     for n in NUMBERS:
         persist = f_recent[n] / max(1, len(recent))
         trend = persist - (f_prev[n] / max(1, len(prev)))
@@ -175,13 +176,24 @@ def predict(
             dist_center = abs(n - 19.0) / 18.0
             geometry = dist_center if gap_delta >= 0 else 1.0 - dist_center
 
-        scores[n] = (
-            w_persist * persist
-            + w_reverse * reversal
-            + w_gap * gap_pressure
-            + w_shape * shape
-            + w_geom * geometry
-        )
+        c_persist = w_persist * persist
+        c_reverse = w_reverse * reversal
+        c_gap = w_gap * gap_pressure
+        c_shape = w_shape * shape
+        c_geom = w_geom * geometry
+        scores[n] = c_persist + c_reverse + c_gap + c_shape + c_geom
+        score_components[n] = {
+            "persist_raw": float(persist),
+            "reversal_raw": float(reversal),
+            "gap_pressure_raw": float(gap_pressure),
+            "shape_raw": float(shape),
+            "geometry_raw": float(geometry),
+            "persist": float(c_persist),
+            "reversal": float(c_reverse),
+            "gap": float(c_gap),
+            "shape": float(c_shape),
+            "geometry": float(c_geom),
+        }
 
     target_center = 19.0 + max(-3.0, min(3.0, center_delta * 0.35))
     ranked = sorted(NUMBERS, key=lambda n: (-scores[n], abs(n - target_center), n))
@@ -429,6 +441,7 @@ def score_snapshot(
     return {
         "scores": {str(n): float(scores[n]) for n in NUMBERS},
         "ranks": {str(n): int(ranks[n]) for n in NUMBERS},
+        "components": {str(n): score_components[n] for n in NUMBERS},
         "state": {
             "model": "x",
             "snapshot_kind": "pre_selection_score",
