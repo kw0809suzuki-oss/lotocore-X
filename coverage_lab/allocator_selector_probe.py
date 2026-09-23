@@ -183,7 +183,7 @@ def main():
     p.add_argument("--seeds",type=int,default=100)
     a=p.parse_args()
     df=pd.read_csv(a.data).sort_values("round").reset_index(drop=True)
-    rows=build_rows(df,201,695,a.seeds)
+    rows=build_rows(df,201,550,a.seeds)
     design=rows[(rows["round"]>=201)&(rows["round"]<=400)].copy()
     valid=rows[(rows["round"]>=401)&(rows["round"]<=550)].copy()
     holdout=rows[(rows["round"]>=551)&(rows["round"]<=695)].copy()
@@ -191,7 +191,7 @@ def main():
     score,f,op,thr,dm=choose_rule(design)
     vm=eval_policy(valid,f,op,thr)
 
-    rows["split"]="holdout_unopened"
+    rows["split"]="validation"
     rows.loc[rows["round"].between(201,400),"split"]="design"
     rows.loc[rows["round"].between(401,550),"split"]="validation"
     rows["selector_rule_selected_in_design"]=0
@@ -205,12 +205,12 @@ def main():
     lines=[
       "=== LOTO7 ALLOCATOR SELECTOR PROBE v0 ===",
       f"seeds={a.seeds}",
-      "splits: design=201..400 validation=401..550 final_holdout=551..695 (UNOPENED for selector evaluation)",
+      "splits: design=201..400 validation=401..550. No historical final holdout is claimed in v0.",
       f"selected_rule: {f} {op} {thr:.8f}",
       f"design: selected={dm['selected']}/{dm['n']} delta_mean_max={dm['delta']:+.6f} improved={dm['improved']} harmed={dm['harmed']} selected_loss_rate={dm['selected_loss_rate']:.4f} 5+ narrow/base={dm['selected_narrow5']:.4f}/{dm['selected_base5']:.4f}",
       f"validation: selected={vm['selected']}/{vm['n']} delta_mean_max={vm['delta']:+.6f} improved={vm['improved']} harmed={vm['harmed']} selected_loss_rate={vm['selected_loss_rate']:.4f} 5+ narrow/base={vm['selected_narrow5']:.4f}/{vm['selected_base5']:.4f}",
       "BOUNDARY: target outcomes are used only to score allocator performance and choose the rule inside DESIGN. No target outcome enters selector features.",
-      "BOUNDARY: final holdout 551..695 is written as raw rows but is not evaluated by the selector in this run.",
+      "BOUNDARY: an earlier debug run computed 551..695 outcomes, so that interval is not treated as untouched final holdout. Future rounds 696+ are the clean holdout.",
       "BOUNDARY: this is a one-feature threshold probe, not a promoted production selector.",
     ]
     a.summary.write_text("\n".join(lines)+"\n",encoding="utf-8")
