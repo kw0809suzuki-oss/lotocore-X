@@ -1,0 +1,34 @@
+name: LOTO7 Allocator Veto Probe v0
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'coverage_lab/allocator_veto_probe.py'
+      - '.github/workflows/allocator-veto-probe.yml'
+
+jobs:
+  veto-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Pin Phase10 model code for reproducibility
+        run: |
+          git show b11df575c7e7590f8ebb11e22545a5ae3ca03242:x_agent.py > x_agent.py
+          git show b11df575c7e7590f8ebb11e22545a5ae3ca03242:lotocore.py > lotocore.py
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run veto probe
+        run: python coverage_lab/allocator_veto_probe.py --data data/loto7.csv --seeds 100
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-allocator-veto-probe-v0
+          path: |
+            results/loto7_allocator_veto_probe.csv
+            results/loto7_allocator_veto_summary.txt
