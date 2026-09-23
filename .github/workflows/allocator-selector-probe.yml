@@ -1,0 +1,31 @@
+name: LOTO7 Allocator Selector Probe v0
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'coverage_lab/allocator_selector_probe.py'
+      - '.github/workflows/allocator-selector-probe.yml'
+      - 'x_agent.py'
+      - 'lotocore.py'
+      - 'fetch_loto7.py'
+
+jobs:
+  selector-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run allocator selector probe
+        run: python coverage_lab/allocator_selector_probe.py --data data/loto7.csv --seeds 100
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-allocator-selector-probe-v0
+          path: |
+            results/loto7_allocator_selector_probe.csv
+            results/loto7_allocator_selector_summary.txt
