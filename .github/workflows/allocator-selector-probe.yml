@@ -15,10 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
+      - name: Pin Phase10 model code for reproducibility
+        run: |
+          git show b11df575c7e7590f8ebb11e22545a5ae3ca03242:x_agent.py > x_agent.py
+          git show b11df575c7e7590f8ebb11e22545a5ae3ca03242:lotocore.py > lotocore.py
       - name: Fetch LOTO7 history
         run: python fetch_loto7.py --limit 700
       - name: Run allocator selector probe
