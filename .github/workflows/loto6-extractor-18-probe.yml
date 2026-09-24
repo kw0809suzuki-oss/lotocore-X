@@ -1,0 +1,122 @@
+name: LOTO6 Extractor 18 Probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-extractor-18-v0
+    paths:
+      - '.github/workflows/loto6-extractor-18-probe.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pandas requests lxml html5lib
+      - name: Fetch latest 400 LOTO6 draws
+        run: python fetch_loto6.py --limit 400
+      - name: Walk-forward 43 to 18 extraction probe
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          import pandas as pd
+
+          df = pd.read_csv("data/loto6.csv").sort_values("round").reset_index(drop=True)
+          nums = [[int(row[f"n{i}"]) for i in range(1,7)] for _, row in df.iterrows()]
+          rounds = [int(x) for x in df["round"]]
+
+          MIN_HISTORY = 100
+          POOL = 18
+          METHODS = ["hot20", "hot50", "hot100", "cold20", "due"]
+
+          def counts(window):
+              c = [0] * 44
+              for draw in window:
+                  for n in draw:
+                      c[n] += 1
+              return c
+
+          def select_pool(i, method):
+              history = nums[:i]
+              if method.startswith("hot"):
+                  w = int(method[3:])
+                  c = counts(history[-w:])
+                  ranked = sorted(range(1,44), key=lambda n: (-c[n], n))
+              elif method == "cold20":
+                  c = counts(history[-20:])
+                  ranked = sorted(range(1,44), key=lambda n: (c[n], n))
+              elif method == "due":
+                  last = {}
+                  for j, draw in enumerate(history):
+                      for n in draw:
+                          last[n] = j
+                  ranked = sorted(range(1,44), key=lambda n: (-(i - 1 - last.get(n, -1)), n))
+              else:
+                  raise ValueError(method)
+              return set(ranked[:POOL])
+
+          # Exact null for a size-18 pool against an independent 6-of-43 draw.
+          from math import comb
+          den = comb(43, 6)
+          null_p = {k: comb(18,k)*comb(25,6-k)/den for k in range(7)}
+          null_mean = 6*18/43
+          # Hypergeometric variance.
+          null_var = 6*(18/43)*(25/43)*((43-6)/(43-1))
+
+          results = {}
+          n_eval = len(nums) - MIN_HISTORY
+          for method in METHODS:
+              hits = []
+              for i in range(MIN_HISTORY, len(nums)):
+                  pool = select_pool(i, method)
+                  hits.append(len(pool.intersection(nums[i])))
+              mean = sum(hits)/len(hits)
+              z = (mean-null_mean)/math.sqrt(null_var/len(hits))
+              results[method] = {
+                  "mean_hits": mean,
+                  "delta_vs_null": mean-null_mean,
+                  "z_vs_null": z,
+                  "p_ge3": sum(h>=3 for h in hits)/len(hits),
+                  "p_ge4": sum(h>=4 for h in hits)/len(hits),
+                  "p_ge5": sum(h>=5 for h in hits)/len(hits),
+                  "max_hits": max(hits),
+                  "hit_hist": {str(k): hits.count(k) for k in range(7)},
+              }
+
+          out = {
+              "source_rounds": [rounds[0], rounds[-1]],
+              "draws": len(nums),
+              "min_history": MIN_HISTORY,
+              "eval_rounds": [rounds[MIN_HISTORY], rounds[-1]],
+              "eval_n": n_eval,
+              "pool_size": POOL,
+              "null": {
+                  "mean_hits": null_mean,
+                  "p_ge3": sum(null_p[k] for k in range(3,7)),
+                  "p_ge4": sum(null_p[k] for k in range(4,7)),
+                  "p_ge5": sum(null_p[k] for k in range(5,7)),
+                  "distribution": {str(k): null_p[k] for k in range(7)},
+              },
+              "methods": results,
+              "boundary": "Exploratory only. Same history window is used to compare several extractors; no promotion claim."
+          }
+          Path("results").mkdir(exist_ok=True)
+          Path("results/loto6_extractor_18_probe.json").write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+
+          print(json.dumps(out, ensure_ascii=False, indent=2))
+          PY
+      - name: Upload probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-extractor-18-probe
+          path: results/loto6_extractor_18_probe.json
+          if-no-files-found: error
