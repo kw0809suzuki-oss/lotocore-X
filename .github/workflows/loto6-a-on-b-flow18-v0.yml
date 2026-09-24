@@ -1,0 +1,29 @@
+name: LOTO6 A-on-B Flow18 v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-a-on-b-flow18-v0
+    paths:
+      - 'playground/loto6-a-on-b-flow18/**'
+      - '.github/workflows/loto6-a-on-b-flow18-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Put actual world A on the random-world B field
+        run: python playground/loto6-a-on-b-flow18/a_on_b_probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-a-on-b-flow18-v0
+          path: results/loto6_a_on_b_flow18_v0.json
+          if-no-files-found: error
