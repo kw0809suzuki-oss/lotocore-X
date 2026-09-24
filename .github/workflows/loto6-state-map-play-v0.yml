@@ -1,0 +1,29 @@
+name: LOTO6 State Map Play v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-state-map-play-v0
+    paths:
+      - 'playground/loto6-state-map-play/**'
+      - '.github/workflows/loto6-state-map-play-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Run coarse Flow Break Uncertainty Re-formation play
+        run: python playground/loto6-state-map-play/state_map_play.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-state-map-play-v0
+          path: results/loto6_state_map_play_v0.json
+          if-no-files-found: error
