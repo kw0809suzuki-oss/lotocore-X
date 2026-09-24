@@ -1,0 +1,29 @@
+name: LOTO6 Transition Independent Null
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'check_loto6_transition_null.py'
+      - '.github/workflows/loto6-transition-null.yml'
+
+jobs:
+  transition-null:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install probe dependency
+        run: pip install requests
+      - name: Run Transition independent-null probe
+        run: python check_loto6_transition_null.py
+      - name: Upload Transition null evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-transition-null
+          path: |
+            results/loto6_transition_null.json
+            results/loto6_transition_null_samples.csv
