@@ -1,0 +1,29 @@
+name: LOTO6 Route-Aware Play v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-route-aware-play-v0
+    paths:
+      - 'playground/loto6-route-aware-play/**'
+      - '.github/workflows/loto6-route-aware-play-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Run route-aware 18-number play
+        run: python playground/loto6-route-aware-play/route_aware_play.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-route-aware-play-v0
+          path: results/loto6_route_aware_play_v0.json
+          if-no-files-found: error
