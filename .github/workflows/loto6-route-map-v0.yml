@@ -1,0 +1,29 @@
+name: LOTO6 Large Route Map v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-route-map-v0
+    paths:
+      - 'playground/loto6-route-map/**'
+      - '.github/workflows/loto6-route-map-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Observe large route bundles
+        run: python playground/loto6-route-map/route_map_probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-route-map-v0
+          path: results/loto6_route_map_v0.json
+          if-no-files-found: error
