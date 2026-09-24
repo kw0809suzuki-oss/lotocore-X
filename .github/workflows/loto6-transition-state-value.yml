@@ -1,0 +1,29 @@
+name: LOTO6 Transition State Value
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'check_loto6_transition_state_value.py'
+      - '.github/workflows/loto6-transition-state-value.yml'
+
+jobs:
+  transition-state-value:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install probe dependency
+        run: pip install requests
+      - name: Run fixed Transition State holdout probe
+        run: python check_loto6_transition_state_value.py
+      - name: Upload Transition State evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-transition-state-value
+          path: |
+            results/loto6_transition_state_value.json
+            results/loto6_transition_state_value_blocks.csv
