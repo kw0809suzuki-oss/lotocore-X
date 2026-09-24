@@ -1,0 +1,33 @@
+name: LOTO6 Position State Value
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'check_loto6_position_state_value.py'
+      - '.github/workflows/loto6-position-state-value.yml'
+
+jobs:
+  position-state-value:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install probe dependency
+        run: pip install requests
+
+      - name: Run fixed Position State holdout probe
+        run: python check_loto6_position_state_value.py
+
+      - name: Upload Position State evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-position-state-value
+          path: |
+            results/loto6_position_state_value.json
+            results/loto6_position_state_value_blocks.csv
