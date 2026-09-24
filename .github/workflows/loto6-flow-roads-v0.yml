@@ -1,0 +1,29 @@
+name: LOTO6 Flow Roads v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-flow-roads-v0
+    paths:
+      - 'playground/loto6-flow-roads/**'
+      - '.github/workflows/loto6-flow-roads-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Observe Flow-to-Flow roads
+        run: python playground/loto6-flow-roads/flow_roads_probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-flow-roads-v0
+          path: results/loto6_flow_roads_v0.json
+          if-no-files-found: error
