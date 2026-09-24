@@ -18,21 +18,42 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install dependencies
-        run: pip install pandas requests lxml html5lib
-      - name: Fetch latest 400 LOTO6 draws
-        run: python fetch_loto6.py --limit 400
+      - name: Install dependency
+        run: pip install requests
       - name: Walk-forward 43 to 18 extraction probe
         shell: bash
         run: |
           python - <<'PY'
-          import json, math
+          import csv, io, json, math
           from pathlib import Path
-          import pandas as pd
+          from math import comb
+          import requests
 
-          df = pd.read_csv("data/loto6.csv").sort_values("round").reset_index(drop=True)
-          nums = [[int(row[f"n{i}"]) for i in range(1,7)] for _, row in df.iterrows()]
-          rounds = [int(x) for x in df["round"]]
+          URL = "https://www.mk-mode.com/rails/loto/LOTO6_ALL.csv"
+          r = requests.get(URL, timeout=30, headers={"User-Agent":"lotocore-X research probe"})
+          r.raise_for_status()
+          try:
+              text = r.content.decode("cp932")
+          except UnicodeDecodeError:
+              text = r.content.decode("utf-8")
+
+          rows = []
+          reader = csv.reader(io.StringIO(text))
+          next(reader, None)
+          for row in reader:
+              try:
+                  round_no = int(row[0])
+                  draw = sorted(int(row[2+i]) for i in range(6))
+                  if len(draw) == 6 and len(set(draw)) == 6 and all(1 <= n <= 43 for n in draw):
+                      rows.append((round_no, draw))
+              except Exception:
+                  continue
+          rows.sort(key=lambda x: x[0])
+          if len(rows) < 300:
+              raise RuntimeError(f"too few parsed rows: {len(rows)}")
+
+          rounds = [r for r,_ in rows]
+          nums = [d for _,d in rows]
 
           MIN_HISTORY = 100
           POOL = 18
@@ -64,16 +85,12 @@ jobs:
                   raise ValueError(method)
               return set(ranked[:POOL])
 
-          # Exact null for a size-18 pool against an independent 6-of-43 draw.
-          from math import comb
           den = comb(43, 6)
           null_p = {k: comb(18,k)*comb(25,6-k)/den for k in range(7)}
           null_mean = 6*18/43
-          # Hypergeometric variance.
           null_var = 6*(18/43)*(25/43)*((43-6)/(43-1))
 
           results = {}
-          n_eval = len(nums) - MIN_HISTORY
           for method in METHODS:
               hits = []
               for i in range(MIN_HISTORY, len(nums)):
@@ -82,36 +99,37 @@ jobs:
               mean = sum(hits)/len(hits)
               z = (mean-null_mean)/math.sqrt(null_var/len(hits))
               results[method] = {
-                  "mean_hits": mean,
-                  "delta_vs_null": mean-null_mean,
-                  "z_vs_null": z,
-                  "p_ge3": sum(h>=3 for h in hits)/len(hits),
-                  "p_ge4": sum(h>=4 for h in hits)/len(hits),
-                  "p_ge5": sum(h>=5 for h in hits)/len(hits),
+                  "mean_hits": round(mean, 6),
+                  "delta_vs_null": round(mean-null_mean, 6),
+                  "z_vs_null": round(z, 4),
+                  "p_ge3": round(sum(h>=3 for h in hits)/len(hits), 6),
+                  "p_ge4": round(sum(h>=4 for h in hits)/len(hits), 6),
+                  "p_ge5": round(sum(h>=5 for h in hits)/len(hits), 6),
                   "max_hits": max(hits),
                   "hit_hist": {str(k): hits.count(k) for k in range(7)},
               }
 
           out = {
+              "source": URL,
               "source_rounds": [rounds[0], rounds[-1]],
               "draws": len(nums),
               "min_history": MIN_HISTORY,
               "eval_rounds": [rounds[MIN_HISTORY], rounds[-1]],
-              "eval_n": n_eval,
+              "eval_n": len(nums)-MIN_HISTORY,
               "pool_size": POOL,
               "null": {
-                  "mean_hits": null_mean,
-                  "p_ge3": sum(null_p[k] for k in range(3,7)),
-                  "p_ge4": sum(null_p[k] for k in range(4,7)),
-                  "p_ge5": sum(null_p[k] for k in range(5,7)),
-                  "distribution": {str(k): null_p[k] for k in range(7)},
+                  "mean_hits": round(null_mean, 6),
+                  "p_ge3": round(sum(null_p[k] for k in range(3,7)), 6),
+                  "p_ge4": round(sum(null_p[k] for k in range(4,7)), 6),
+                  "p_ge5": round(sum(null_p[k] for k in range(5,7)), 6),
               },
               "methods": results,
-              "boundary": "Exploratory only. Same history window is used to compare several extractors; no promotion claim."
+              "boundary": "Exploratory only. Five extractors were compared on the same historical walk-forward window; no promotion claim."
           }
           Path("results").mkdir(exist_ok=True)
-          Path("results/loto6_extractor_18_probe.json").write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
-
+          Path("results/loto6_extractor_18_probe.json").write_text(
+              json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8"
+          )
           print(json.dumps(out, ensure_ascii=False, indent=2))
           PY
       - name: Upload probe
