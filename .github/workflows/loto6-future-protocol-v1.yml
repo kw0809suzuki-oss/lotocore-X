@@ -1,0 +1,30 @@
+name: LOTO6 Future Protocol v1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'LOTO6_FUTURE_PROTOCOL_V1.md'
+      - 'loto6_future_protocol_v1.py'
+      - '.github/workflows/loto6-future-protocol-v1.yml'
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Score frozen future protocol
+        run: python loto6_future_protocol_v1.py
+      - name: Upload evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto6-future-protocol-v1
+          path: results/loto6_future_protocol_v1.json
+          if-no-files-found: error
