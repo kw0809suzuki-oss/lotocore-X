@@ -14,7 +14,7 @@ URL = "https://www.mk-mode.com/rails/loto/LOTO6_ALL.csv"
 OUT = Path("results/loto6_state_map_play_v0.json")
 
 SEED = 20260924
-NULL_WORLDS = 300
+NULL_WORLDS = 100
 BURN = 100
 POOL = 18
 CENTER = 37 / 6
