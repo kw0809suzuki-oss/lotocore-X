@@ -22,7 +22,7 @@ MIN_BRANCH = 8
 FIT_NEIGHBORS = 8
 POOL_SIZES = [18, 15, 12]
 RETENTION = [1.00, 0.50, 0.30, 0.20, 0.10]
-BUNDLE_SEEDS = 8
+BUNDLE_SEEDS = 4
 TICKETS = 20
 DRAW_SIZE = 6
 TOTAL_SLOTS = TICKETS * DRAW_SIZE
@@ -226,7 +226,7 @@ def balanced_degrees(pool, seed):
     return deg
 
 
-def choose_ticket(remaining, tickets_left, rng, pair_count=None, triple_count=None):
+def choose_ticket(remaining, tickets_left, rng, pair_count=None):
     chosen = [n for n, c in remaining.items() if c == tickets_left]
     if len(chosen) > DRAW_SIZE:
         raise RuntimeError("infeasible degree sequence")
@@ -237,14 +237,13 @@ def choose_ticket(remaining, tickets_left, rng, pair_count=None, triple_count=No
             weights = [remaining[n] for n in candidates]
             pick = rng.choices(candidates, weights=weights, k=1)[0]
         else:
-            def penalty(n):
-                pair_repeat = sum(pair_count[tuple(sorted((n, x)))] for x in chosen)
-                triple_repeat = 0
-                if triple_count is not None and len(chosen) >= 2:
-                    for a, b in itertools.combinations(chosen, 2):
-                        triple_repeat += triple_count[tuple(sorted((n, a, b)))]
-                return (triple_repeat, pair_repeat, -remaining[n])
-            pick = min(candidates, key=penalty)
+            pick = min(
+                candidates,
+                key=lambda n: (
+                    sum(pair_count[tuple(sorted((n, x)))] for x in chosen),
+                    -remaining[n],
+                ),
+            )
         chosen.append(pick)
     for n in chosen:
         remaining[n] -= 1
@@ -264,14 +263,11 @@ def mesh_pack(degrees, seed):
     rng = random.Random(seed)
     rem = Counter(degrees)
     pair_count = defaultdict(int)
-    triple_count = defaultdict(int)
     out = []
     for i in range(TICKETS):
-        t = choose_ticket(rem, TICKETS - i, rng, pair_count, triple_count)
+        t = choose_ticket(rem, TICKETS - i, rng, pair_count)
         for a, b in itertools.combinations(t, 2):
             pair_count[(a, b)] += 1
-        for tri in itertools.combinations(t, 3):
-            triple_count[tri] += 1
         out.append(t)
     return out
 
@@ -513,7 +509,7 @@ def main():
             "tickets": TICKETS,
             "slots": TOTAL_SLOTS,
             "degree_rule": "same balanced degree sequence is shared by Random allocator and Mesh allocator within each pool/seed",
-            "mesh_rule": "target-independent greedy allocation minimizing repeated triples first, repeated pairs second, while preserving exact number degrees",
+            "mesh_rule": "target-independent broad-mesh allocation minimizing repeated pairs while preserving exact number degrees; this is the same allocator family used in the prior mesh probes",
         },
         "cells": {
             "global_random": "43-number material + random degree-preserving arrangement",
