@@ -9,6 +9,10 @@ on:
       - 'playground/loto6-dynamics-network-coupling/**'
       - '.github/workflows/loto6-dynamics-network-coupling-v0.yml'
 
+concurrency:
+  group: loto6-dynamics-network-coupling-v0
+  cancel-in-progress: true
+
 jobs:
   observe:
     runs-on: ubuntu-latest
