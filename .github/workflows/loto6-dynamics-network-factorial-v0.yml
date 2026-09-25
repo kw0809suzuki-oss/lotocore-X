@@ -1,0 +1,29 @@
+name: LOTO6 Dynamics x Network Factorial v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-dynamics-network-factorial-v0
+    paths:
+      - 'playground/loto6-dynamics-network-factorial/**'
+      - '.github/workflows/loto6-dynamics-network-factorial-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Run dynamics x network factorial
+        run: python playground/loto6-dynamics-network-factorial/factorial.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-dynamics-network-factorial-v0
+          path: results/loto6_dynamics_network_factorial_v0.json
+          if-no-files-found: error
