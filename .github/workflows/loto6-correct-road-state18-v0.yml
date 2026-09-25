@@ -1,0 +1,29 @@
+name: LOTO6 Correct-Road Exact-State18 v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - probe/loto6-correct-road-state18-v0
+    paths:
+      - 'playground/loto6-correct-road-state18/**'
+      - '.github/workflows/loto6-correct-road-state18-v0.yml'
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy requests
+      - name: Measure correct-road exact-state18
+        run: python playground/loto6-correct-road-state18/correct_road_state18.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto6-correct-road-state18-v0
+          path: results/loto6_correct_road_state18_v0.json
+          if-no-files-found: error
