@@ -1,0 +1,22 @@
+name: LOTO7 72-28 Support Origin
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'probe_loto7_72_28_support_origin.py'
+      - '.github/workflows/loto7-72-28-support-origin.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python probe_loto7_72_28_support_origin.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-72-28-support-origin
+          path: results/loto7_72_28_support_origin.csv
