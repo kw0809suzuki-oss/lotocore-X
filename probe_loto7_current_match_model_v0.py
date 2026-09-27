@@ -279,7 +279,7 @@ def main():
                 abox_stats[b]["arms"][mag]["h"] += box.hits(actual, sets[mag])
                 abox_stats[b]["arms"][mag]["d"] += box.dist(actual, sets[mag])
 
-    pd.DataFrame(rows).to_csv(OUT, index=False)
+    OUT.parent.mkdir(parents=True, exist_ok=True)\n    pd.DataFrame(rows).to_csv(OUT, index=False)
 
     evals = []
     max_k = max(NEIGHBOR_KS)
