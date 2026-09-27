@@ -1,0 +1,29 @@
+name: LOTO7 Finite Generation Actual Proximity v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'probe/loto7-a-world-box-state-v0'
+    paths:
+      - 'probe_loto7_finite_generation_actual_proximity_v0.py'
+      - '.github/workflows/loto7-finite-generation-actual-proximity-v0.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python probe_loto7_finite_generation_actual_proximity_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-finite-generation-actual-proximity-v0
+          path: |
+            results/loto7_finite_generation_actual_proximity_v0.csv
+            results/loto7_finite_generation_actual_proximity_summary_v0.csv
