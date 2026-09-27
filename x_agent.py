@@ -411,6 +411,7 @@ def score_snapshot(
                 gap[n] = g
 
     scores = {}
+    score_components = {}
     for n in NUMBERS:
         persist = f_recent[n] / max(1, len(recent))
         trend = persist - (f_prev[n] / max(1, len(prev)))
@@ -433,6 +434,18 @@ def score_snapshot(
             + w_shape * shape
             + w_geom * geometry
         )
+        score_components[n] = {
+            "persist_raw": float(persist),
+            "reversal_raw": float(reversal),
+            "gap_pressure_raw": float(gap_pressure),
+            "shape_raw": float(shape),
+            "geometry_raw": float(geometry),
+            "persist": float(w_persist * persist),
+            "reversal": float(w_reverse * reversal),
+            "gap": float(w_gap * gap_pressure),
+            "shape": float(w_shape * shape),
+            "geometry": float(w_geom * geometry),
+        }
 
     target_center = 19.0 + max(-3.0, min(3.0, center_delta * 0.35))
     ranked = sorted(NUMBERS, key=lambda n: (-scores[n], abs(n - target_center), n))
