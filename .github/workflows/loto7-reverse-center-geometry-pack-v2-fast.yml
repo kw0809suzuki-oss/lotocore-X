@@ -1,0 +1,20 @@
+name: LOTO7 Reverse Center Geometry Pack v2 Fast
+on:
+  workflow_dispatch:
+  push:
+    branches: ['probe/loto7-a-world-box-state-v0']
+    paths:
+      - 'probe_loto7_reverse_center_geometry_pack_v2_fast.py'
+      - '.github/workflows/loto7-reverse-center-geometry-pack-v2-fast.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python probe_loto7_reverse_center_geometry_pack_v2_fast.py
