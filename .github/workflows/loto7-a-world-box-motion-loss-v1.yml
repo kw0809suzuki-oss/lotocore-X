@@ -1,0 +1,27 @@
+name: LOTO7 A World Box Motion Loss v1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'probe/loto7-a-world-box-state-v0'
+    paths:
+      - 'probe_loto7_a_world_box_motion_loss_v1.py'
+      - '.github/workflows/loto7-a-world-box-motion-loss-v1.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python probe_loto7_a_world_box_motion_loss_v1.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-a-world-box-motion-loss-v1
+          path: results/loto7_a_world_box_motion_loss_v1.csv
