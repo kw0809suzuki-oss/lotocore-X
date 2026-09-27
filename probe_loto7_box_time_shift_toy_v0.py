@@ -88,6 +88,7 @@ def trans_similarity(a, b):
 
 
 def mean(xs):
+    xs = list(xs)
     return sum(xs)/len(xs) if xs else float("nan")
 
 
