@@ -42,14 +42,15 @@ def snap(history):
 def candidates(support, scores):
     out = []
     for comb in combinations(support, 7):
-        out.append((comb, center(comb), sum(scores[n] for n in comb)))
+        out.append((comb, center(comb), span(comb), sum(scores[n] for n in comb)))
     return out
 
-def pick(cands, target_center, scale):
+def pick(cands, target_center, target_span, scale):
     best = None
     best_key = None
-    for comb, c, mass in cands:
-        key = (abs(c-target_center)/scale, -mass, comb)
+    for comb, c, sp, mass in cands:
+        err = abs(c-target_center)/scale + abs(sp-target_span)/scale
+        key = (err, -mass, comb)
         if best_key is None or key < best_key:
             best_key = key
             best = comb
@@ -111,14 +112,14 @@ def main():
             "base_d": dist(actual, core),
         }
         for m in MAGS:
-            picks = core if m == 0.0 or direction == 0 else pick(cands, c - direction*m, max(sp,1.0))
+            picks = core if m == 0.0 or direction == 0 else pick(cands, c - direction*m, sp, max(sp,1.0))
             k = f"m{str(m).replace('.','p')}"
             rec[k+"_h"] = hits(actual, picks)
             rec[k+"_d"] = dist(actual, picks)
             rec[k+"_picks"] = picks
         rows.append(rec)
 
-    print("=== LOTO7 DYNAMIC REVERSE BAND TOY v0 ===")
+    print("=== LOTO7 DYNAMIC REVERSE BAND TOY v0B ===")
     print(f"targets={len(rows)} rounds={rows[0]['round']}..{rows[-1]['round']}")
     print("One draw is added at each step; Box(t) uses only history before target t.")
     print("Bands use absolute Box-center move: small <0.75, medium 0.75..2.0, large >2.0.")
