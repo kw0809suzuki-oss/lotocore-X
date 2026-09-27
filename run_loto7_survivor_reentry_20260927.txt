@@ -1,0 +1,2 @@
+LOTO7 survivor/reentry observation trigger.
+Purpose: run the existing research workflow through its normal push trigger.
