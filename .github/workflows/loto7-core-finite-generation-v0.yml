@@ -1,0 +1,28 @@
+name: LOTO7 Core Finite Generation v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'probe/loto7-a-world-box-state-v0'
+    paths:
+      - 'lotocore_finite_generation_v0.py'
+      - 'benchmark_loto7_core_finite_generation_v0.py'
+      - '.github/workflows/loto7-core-finite-generation-v0.yml'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python benchmark_loto7_core_finite_generation_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-core-finite-generation-v0
+          path: results/loto7_core_finite_generation_v0_benchmark.csv
