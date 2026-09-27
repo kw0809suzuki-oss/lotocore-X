@@ -147,7 +147,7 @@ def main():
     print("DELTA CORRELATION")
     for axis in AXES:
         pearson = res[f"a_d_{axis}"].corr(res[f"box_d_{axis}"], method="pearson")
-        spearman = res[f"a_d_{axis}"].corr(res[f"box_d_{axis}"], method="spearman")
+        spearman = res[f"a_d_{axis}"].rank(method="average").corr(res[f"box_d_{axis}"].rank(method="average"), method="pearson")
         print(f"{axis}: pearson={pearson:.6f} spearman={spearman:.6f}")
 
     print()
