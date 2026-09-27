@@ -10,6 +10,7 @@ WINDOW=100
 ALPHAS=[i/100 for i in range(101)]
 NULL_WORLDS=1000
 SEED=20260927
+# Frozen observation run: 2026-09-27
 
 def ticket(history,a):
     long=history[-100:]; recent=history[-20:]
