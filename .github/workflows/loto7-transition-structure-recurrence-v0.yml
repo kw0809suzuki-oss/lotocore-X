@@ -1,0 +1,20 @@
+name: LOTO7 Transition Structure Recurrence v0
+on:
+  workflow_dispatch:
+  push:
+    branches: ['probe/loto7-a-world-box-state-v0']
+    paths:
+      - 'probe_loto7_transition_structure_recurrence_v0.py'
+      - '.github/workflows/loto7-transition-structure-recurrence-v0.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python probe_loto7_transition_structure_recurrence_v0.py
