@@ -1,0 +1,30 @@
+name: LOTO7 Branch10 vs Core10 vs Random10
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'compare_loto7_branch10_core10_random10.py'
+      - '.github/workflows/loto7-branch10-core10-random10.yml'
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run three-way comparison
+        run: python compare_loto7_branch10_core10_random10.py
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-branch10-core10-random10
+          path: |
+            results/loto7_branch10_core10_random10.csv
+            results/loto7_branch10_core10_random10_summary.json
