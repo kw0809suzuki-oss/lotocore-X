@@ -1,0 +1,30 @@
+name: LOTO7 Branch6 Core4 Bundle v0
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'probe_loto7_branch6_core4_bundle_v0.py'
+      - '.github/workflows/loto7-branch6-core4-bundle-v0.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run Branch6 Core4 bundle probe
+        run: python probe_loto7_branch6_core4_bundle_v0.py
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-branch6-core4-bundle-v0
+          path: |
+            results/loto7_branch6_core4_bundle_v0.csv
+            results/loto7_branch6_core4_bundle_v0_summary.json
