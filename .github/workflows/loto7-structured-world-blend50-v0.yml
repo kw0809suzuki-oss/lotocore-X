@@ -1,0 +1,30 @@
+name: LOTO7 Structured World Blend50 v0
+
+on:
+  push:
+    paths:
+      - 'probe_loto7_structured_world_blend50_v0.py'
+      - '.github/workflows/loto7-structured-world-blend50-v0.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run clean Structured-world Blend50 probe
+        run: python probe_loto7_structured_world_blend50_v0.py --window 100 --worlds 120 --plain-reps 200
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-structured-world-blend50-v0
+          path: |
+            results/loto7_structured_world_blend50_v0_rounds.csv
+            results/loto7_structured_world_blend50_v0_summary.json
