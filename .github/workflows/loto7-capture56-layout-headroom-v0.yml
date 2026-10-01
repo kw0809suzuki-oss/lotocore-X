@@ -1,0 +1,30 @@
+name: LOTO7 Capture56 Layout Headroom v0
+
+on:
+  push:
+    paths:
+      - 'probe_loto7_capture56_layout_headroom_v0.py'
+      - '.github/workflows/loto7-capture56-layout-headroom-v0.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run capture 5/6 headroom probe
+        run: python probe_loto7_capture56_layout_headroom_v0.py --window 100 --pool 400 --keep 120
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-capture56-layout-headroom-v0
+          path: |
+            results/loto7_capture56_layout_headroom_v0_rounds.csv
+            results/loto7_capture56_layout_headroom_v0_summary.json
