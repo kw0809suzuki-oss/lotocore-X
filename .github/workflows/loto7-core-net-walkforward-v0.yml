@@ -26,5 +26,6 @@ jobs:
         with:
           name: loto7-core-net-walkforward-v0
           path: |
+            data/loto7.csv
             results/loto7_core_net_walkforward_v0.csv
             results/loto7_core_net_walkforward_v0_summary.json
