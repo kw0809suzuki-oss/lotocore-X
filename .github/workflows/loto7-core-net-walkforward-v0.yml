@@ -1,0 +1,30 @@
+name: LOTO7 CORE Net Walk-forward v0
+
+on:
+  push:
+    paths:
+      - 'probe_loto7_core_net_walkforward_v0.py'
+      - '.github/workflows/loto7-core-net-walkforward-v0.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run CORE net walk-forward
+        run: python probe_loto7_core_net_walkforward_v0.py --window 100 --random-reps 200
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-core-net-walkforward-v0
+          path: |
+            results/loto7_core_net_walkforward_v0.csv
+            results/loto7_core_net_walkforward_v0_summary.json
