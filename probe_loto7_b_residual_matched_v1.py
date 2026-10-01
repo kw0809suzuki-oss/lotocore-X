@@ -12,8 +12,6 @@ import pandas as pd
 import lotocore
 
 DATA = Path("data/loto7.csv")
-OUT_JSON = Path("results/loto7_b_residual_matched_v1_summary.json")
-OUT_CSV = Path("results/loto7_b_residual_matched_v1_pairs.csv")
 
 
 def actual_numbers(row):
@@ -107,14 +105,20 @@ def generate_pool(candidates, seed, n):
     deg, pair, rows = [], [], []
     for b in bundles:
         d, p = a_features(b, candidates)
-        deg.append(d); pair.append(p)
-        rows.append({"bundle": b, "degree_variance": d, "pair_reuse_sq": p, "b": b_value(b, candidates)})
+        deg.append(d)
+        pair.append(p)
+        rows.append({
+            "bundle": b,
+            "degree_variance": d,
+            "pair_reuse_sq": p,
+            "b": b_value(b, candidates),
+        })
 
     zd, zp = zscores(deg), zscores(pair)
     for r, x, y in zip(rows, zd, zp):
         r["a_score"] = x + y
     rows.sort(key=lambda r: r["a_score"])
-    return rows[:max(40, len(rows)//3)]
+    return rows[:max(40, len(rows) // 3)]
 
 
 def max_hits(bundle, actual):
@@ -147,11 +151,15 @@ def main():
     ap.add_argument("--window", type=int, default=100)
     ap.add_argument("--pool", type=int, default=800)
     ap.add_argument("--eps", type=float, default=0.05)
+    ap.add_argument("--seed-offset", type=int, default=123)
+    ap.add_argument("--tag", type=str, default="base")
     args = ap.parse_args()
+
+    out_json = Path(f"results/loto7_b_residual_matched_v1_{args.tag}_summary.json")
+    out_csv = Path(f"results/loto7_b_residual_matched_v1_{args.tag}_pairs.csv")
 
     df = pd.read_csv(DATA).sort_values("round").reset_index(drop=True)
     rows = []
-    total_pairs = 0
 
     for i in range(args.window, len(df)):
         history = df.iloc[i-args.window:i]
@@ -159,9 +167,8 @@ def main():
         rnd = int(row["round"])
         actual = actual_numbers(row)
         cand = core18(history)
-        pool = generate_pool(cand, rnd * 1000003 + 123, args.pool)
+        pool = generate_pool(cand, rnd * 1000003 + args.seed_offset, args.pool)
         pairs = match_pairs(pool, args.eps)
-        total_pairs += len(pairs)
         for h, l, dist in pairs:
             hh = max_hits(h["bundle"], actual)
             lh = max_hits(l["bundle"], actual)
@@ -184,26 +191,33 @@ def main():
             })
 
     out = pd.DataFrame(rows)
-    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    out.to_csv(OUT_CSV, index=False)
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(out_csv, index=False)
 
     summary = {
-        "probe": "LOTO7 B Residual Matched v1",
+        "probe": "LOTO7 B Residual Matched v1 replicate",
+        "tag": args.tag,
+        "seed_offset": args.seed_offset,
         "targets": int(len(df) - args.window),
         "pairs": int(len(out)),
         "epsilon": args.eps,
         "mean_a_distance": float(out["a_distance"].mean()) if len(out) else None,
         "max_a_distance": float(out["a_distance"].max()) if len(out) else None,
-        "results": {}
+        "results": {},
     }
     for m in ["max_hits", "5plus", "6plus", "7"]:
         a = float(out[f"high_{m}"].mean()) if len(out) else None
         b = float(out[f"low_{m}"].mean()) if len(out) else None
-        summary["results"][m] = {"B_high": a, "B_low": b, "delta": (a-b) if a is not None else None}
+        summary["results"][m] = {
+            "B_high": a,
+            "B_low": b,
+            "delta": (a - b) if a is not None else None,
+        }
 
-    OUT_JSON.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    out_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print("=== LOTO7 B RESIDUAL MATCHED v1 ===")
+    print("=== LOTO7 B RESIDUAL MATCHED v1 REPLICATE ===")
+    print(f"tag={args.tag} seed_offset={args.seed_offset}")
     print(f"history_draws={len(df)} usable_targets={len(df)-args.window} window={args.window}")
     print(f"matched_pairs={len(out)} epsilon={args.eps}")
     if len(out):
@@ -211,8 +225,8 @@ def main():
         for m, x in summary["results"].items():
             print(f"{m}: B_high={x['B_high']:.6f} B_low={x['B_low']:.6f} delta={x['delta']:+.6f}")
     print("B = top3 cooccurrence only; A is pair-matched within epsilon.")
-    print(f"saved -> {OUT_CSV}")
-    print(f"saved -> {OUT_JSON}")
+    print(f"saved -> {out_csv}")
+    print(f"saved -> {out_json}")
 
 
 if __name__ == "__main__":
