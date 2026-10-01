@@ -1,0 +1,49 @@
+name: LOTO7 B Residual Replication v1
+
+on:
+  push:
+    paths:
+      - 'probe_loto7_b_residual_matched_v1.py'
+      - '.github/workflows/loto7-b-residual-replication-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  replicate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: eps02_s123
+            eps: "0.02"
+            seed: "123"
+          - tag: eps05_s123
+            eps: "0.05"
+            seed: "123"
+          - tag: eps10_s123
+            eps: "0.10"
+            seed: "123"
+          - tag: eps05_s777
+            eps: "0.05"
+            seed: "777"
+          - tag: eps05_s2026
+            eps: "0.05"
+            seed: "2026"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run replication
+        run: python probe_loto7_b_residual_matched_v1.py --window 100 --pool 800 --eps ${{ matrix.eps }} --seed-offset ${{ matrix.seed }} --tag ${{ matrix.tag }}
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-b-residual-${{ matrix.tag }}
+          path: |
+            results/loto7_b_residual_matched_v1_${{ matrix.tag }}_pairs.csv
+            results/loto7_b_residual_matched_v1_${{ matrix.tag }}_summary.json
