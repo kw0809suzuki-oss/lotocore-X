@@ -1,0 +1,26 @@
+name: LOTO7 Round412 Depth Probe v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'experiment/loto7-portfolio20-v0-20261002'
+    paths:
+      - 'coverage_lab/loto7_round412_depth_probe_v0.py'
+      - '.github/workflows/loto7-round412-depth-v0.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Observe round 412 4plus/5plus terrain
+        run: python coverage_lab/loto7_round412_depth_probe_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-round412-depth-v0
+          path: results/loto7_round412_depth_probe_v0.json
