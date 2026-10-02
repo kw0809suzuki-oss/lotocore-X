@@ -114,14 +114,63 @@ def structured_bundle(pool_order: list[int], n_tickets: int, seed: int) -> list[
 
 
 def unique_structured_bundle(
-    pool_order: list[int], n_tickets: int, seed: int, max_tries: int = 100
+    pool_order: list[int], n_tickets: int, seed: int
 ) -> tuple[list[tuple[int, ...]], int]:
-    for attempt in range(max_tries):
-        out = structured_bundle(pool_order, n_tickets, seed + attempt)
-        if len(set(out)) == len(out):
-            return out, attempt
-    raise RuntimeError("could not produce unique structured bundle")
+    """Repair only duplicate tickets while preserving the same CORE18 world.
 
+    The base allocator remains authoritative. If it emits the same 7-number
+    ticket more than once, keep the first occurrence and replace only later
+    duplicates with deterministic pre-draw candidates from the same pool.
+    Replacements prefer currently under-used numbers, high overlap with the
+    duplicated ticket, and low pair reuse against already-kept tickets.
+    """
+    raw = structured_bundle(pool_order, n_tickets, seed)
+    if len(set(raw)) == len(raw):
+        return raw, 0
+
+    target = rank_degrees(pool_order, n_tickets)
+    rank = {n: i for i, n in enumerate(pool_order)}
+    candidate_universe = sampled_combinations(
+        pool_order,
+        seed + 7000,
+        list(dict.fromkeys(raw)),
+        target_size=CANDIDATE_SAMPLE,
+    )
+
+    out: list[tuple[int, ...]] = []
+    used = set()
+    usage = Counter()
+    repairs = 0
+
+    for ticket in raw:
+        if ticket not in used:
+            chosen = ticket
+        else:
+            repairs += 1
+            candidates = [x for x in candidate_universe if x not in used]
+            if not candidates:
+                raise RuntimeError("no unused repair candidate")
+
+            def repair_key(combo: tuple[int, ...]):
+                deficit_gain = sum(max(target[n] - usage[n], 0) for n in combo)
+                overlap = len(set(combo) & set(ticket))
+                pair_penalty = sum(
+                    len(set(combo) & set(prev)) ** 2 for prev in out
+                )
+                rank_sum = sum(rank[n] for n in combo)
+                return (deficit_gain, overlap, -pair_penalty, -rank_sum, tuple(-n for n in combo))
+
+            chosen = max(candidates, key=repair_key)
+
+        out.append(chosen)
+        used.add(chosen)
+        usage.update(chosen)
+
+    if len(out) != n_tickets or len(set(out)) != n_tickets:
+        raise RuntimeError("duplicate repair did not produce unique bundle")
+    if set().union(*(set(t) for t in out)) != set(pool_order):
+        raise RuntimeError("duplicate repair lost CORE18 coverage")
+    return out, repairs
 
 def sampled_combinations(
     pool_order: list[int],
