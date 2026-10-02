@@ -1,0 +1,32 @@
+name: LOTO7 Portfolio 20 Probe v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'experiment/loto7-portfolio20-v0-20261002'
+    paths:
+      - 'coverage_lab/loto7_portfolio20_v0.py'
+      - 'fetch_loto7.py'
+      - 'lotocore.py'
+      - '.github/workflows/loto7-portfolio20-v0.yml'
+
+jobs:
+  portfolio20:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run Structured20 vs Portfolio20
+        run: python coverage_lab/loto7_portfolio20_v0.py --data data/loto7.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-portfolio20-v0
+          path: |
+            results/loto7_portfolio20_v0.csv
+            results/loto7_portfolio20_v0_summary.json
