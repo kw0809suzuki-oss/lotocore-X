@@ -112,6 +112,34 @@ def structured_bundle(pool_order: list[int], n_tickets: int, seed: int) -> list[
     return out
 
 
+def unique_structured_bundle(
+    pool_order: list[int], n_tickets: int, seed: int, max_tries: int = 100
+) -> tuple[list[tuple[int, ...]], int]:
+    for attempt in range(max_tries):
+        out = structured_bundle(pool_order, n_tickets, seed + attempt)
+        if len(set(out)) == len(out):
+            return out, attempt
+    raise RuntimeError("could not produce unique structured bundle")
+
+
+def sampled_combinations(
+    pool_order: list[int],
+    seed: int,
+    required: list[tuple[int, ...]],
+    target_size: int = CANDIDATE_SAMPLE,
+) -> list[tuple[int, ...]]:
+    rng = random.Random(seed)
+    seen = set(required)
+    out = list(required)
+    while len(out) < target_size:
+        combo = tuple(sorted(rng.sample(pool_order, DRAW_SIZE)))
+        if combo in seen:
+            continue
+        seen.add(combo)
+        out.append(combo)
+    return out
+
+
 def raw_structure(ticket: tuple[int, ...]) -> tuple[float, ...]:
     s = set(ticket)
     odd = sum(n % 2 for n in ticket)
@@ -170,8 +198,8 @@ def portfolio_bundle(
     scores: dict[int, float],
     seed: int,
 ) -> tuple[list[tuple[int, ...]], dict]:
-    core = structured_bundle(pool_order, B_CORE, seed)
-    combos = list(itertools.combinations(sorted(pool_order), DRAW_SIZE))
+    core, core_attempt = unique_structured_bundle(pool_order, B_CORE, seed)
+    combos = sampled_combinations(pool_order, seed + 5000, core)
     z = standardized_vectors(combos)
     combo_score = {c: avg_candidate_score(c, scores) for c in combos}
     median_score = sorted(combo_score.values())[len(combo_score) // 2]
@@ -295,7 +323,7 @@ def summarize(res: pd.DataFrame) -> dict:
         "boundary": [
             "Same pre-draw CORE18 candidate pool is used for A and B within each round.",
             "Winning unique contact is expected to be identical when both methods touch all CORE18 numbers; it is retained as a control.",
-            "No future result is used to construct either bundle.",
+            "No future result is used to construct either bundle.",\n            "Diversify/falsify selection uses a fixed-seed pre-draw sample of 2500 legal CORE18 combinations per round.",
             "This experiment tests ticket placement, not a change in the underlying lottery probability.",
         ],
     }
