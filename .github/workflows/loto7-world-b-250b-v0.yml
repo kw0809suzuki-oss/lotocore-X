@@ -1,0 +1,25 @@
+name: LOTO7 World B 250B v0
+
+on:
+  push:
+    branches:
+      - 'experiment/loto7-world-b-500-v0-20261003'
+    paths:
+      - '.github/workflows/loto7-world-b-250b-v0.yml'
+  workflow_dispatch:
+
+jobs:
+  world-b-250b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Run World B half B
+        run: python coverage_lab/loto7_world_b_500_v0.py --shard-id 1 --num-shards 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-world-b-250b-v0
+          path: results/world_b/world_b_shard_001.json
