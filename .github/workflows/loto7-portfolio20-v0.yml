@@ -28,3 +28,5 @@ jobs:
           path: |
             results/loto7_portfolio20_v0.csv
             results/loto7_portfolio20_v0_summary.json
+
+# rerun after import-path fix
