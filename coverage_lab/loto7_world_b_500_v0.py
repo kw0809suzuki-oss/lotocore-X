@@ -8,6 +8,9 @@ import random
 from pathlib import Path
 
 import pandas as pd
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from coverage_lab.loto7_portfolio20_v0 import (
     MODEL_WINDOW,
