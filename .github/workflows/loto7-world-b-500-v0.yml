@@ -2,6 +2,13 @@ name: LOTO7 World B 500 v0
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'experiment/loto7-world-b-500-v0-20261003'
+    paths:
+      - 'coverage_lab/loto7_world_b_500_v0.py'
+      - 'coverage_lab/loto7_world_b_aggregate_v0.py'
+      - '.github/workflows/loto7-world-b-500-v0.yml'
 
 jobs:
   world-b:
