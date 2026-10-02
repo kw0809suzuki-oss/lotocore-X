@@ -1,0 +1,43 @@
+name: LOTO7 World B 500 v0
+
+on:
+  workflow_dispatch:
+
+jobs:
+  world-b:
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Run 5 World B worlds
+        run: python coverage_lab/loto7_world_b_500_v0.py --shard-id ${{ matrix.shard }} --num-shards 100
+      - uses: actions/upload-artifact@v4
+        with:
+          name: world-b-shard-${{ matrix.shard }}
+          path: results/world_b/world_b_shard_*.json
+
+  aggregate:
+    needs: world-b
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: world-b-shard-*
+          path: artifacts
+      - name: Aggregate 500 worlds
+        run: python coverage_lab/loto7_world_b_aggregate_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-world-b-500-v0
+          path: |
+            results/world_b/loto7_world_b_500_summary.json
+            results/world_b/loto7_world_b_500_worlds.json
