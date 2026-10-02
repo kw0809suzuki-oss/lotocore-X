@@ -323,7 +323,8 @@ def summarize(res: pd.DataFrame) -> dict:
         "boundary": [
             "Same pre-draw CORE18 candidate pool is used for A and B within each round.",
             "Winning unique contact is expected to be identical when both methods touch all CORE18 numbers; it is retained as a control.",
-            "No future result is used to construct either bundle.",\n            "Diversify/falsify selection uses a fixed-seed pre-draw sample of 2500 legal CORE18 combinations per round.",
+            "No future result is used to construct either bundle.",
+            "Diversify/falsify selection uses a fixed-seed pre-draw sample of 2500 legal CORE18 combinations per round.",
             "This experiment tests ticket placement, not a change in the underlying lottery probability.",
         ],
     }
