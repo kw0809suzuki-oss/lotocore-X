@@ -1,0 +1,26 @@
+name: LOTO7 4to5 Transition Probe v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'experiment/loto7-portfolio20-v0-20261002'
+    paths:
+      - 'coverage_lab/loto7_4to5_transition_probe_v0.py'
+      - '.github/workflows/loto7-4to5-transition-v0.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Observe round 374 and 518 transitions
+        run: python coverage_lab/loto7_4to5_transition_probe_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-4to5-transition-v0
+          path: results/loto7_4to5_transition_probe_v0.json
