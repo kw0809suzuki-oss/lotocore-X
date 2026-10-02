@@ -255,7 +255,19 @@ def portfolio_bundle(
     median_score = sorted(combo_score.values())[len(combo_score) // 2]
 
     selected = list(core)
-    remaining = [c for c in combos if c not in set(selected)]
+    selected_set = set(selected)
+    remaining = [c for c in combos if c not in selected_set]
+
+    # Same selection objective as the direct version, but cache each
+    # candidate's current nearest structural distance and maximum overlap.
+    min_dist = {
+        c: min(euclid(z[c], z[s]) for s in selected)
+        for c in remaining
+    }
+    overlap = {
+        c: max_overlap(c, selected)
+        for c in remaining
+    }
 
     diversify_candidates = [c for c in remaining if combo_score[c] >= median_score]
     diversify = []
@@ -263,40 +275,60 @@ def portfolio_bundle(
         best = max(
             diversify_candidates,
             key=lambda c: (
-                min(euclid(z[c], z[s]) for s in selected),
-                -max_overlap(c, selected),
+                min_dist[c],
+                -overlap[c],
                 combo_score[c],
                 tuple(-n for n in c),
             ),
         )
         diversify.append(best)
         selected.append(best)
+        selected_set.add(best)
         diversify_candidates.remove(best)
+
+        best_set = set(best)
+        for c in remaining:
+            if c in selected_set:
+                continue
+            min_dist[c] = min(min_dist[c], euclid(z[c], z[best]))
+            overlap[c] = max(overlap[c], len(set(c) & best_set))
 
     core_centroid = tuple(
         sum(z[t][i] for t in core) / len(core)
         for i in range(len(z[core[0]]))
     )
-    remaining_set = set(selected)
+    centroid_dist = {
+        c: euclid(z[c], core_centroid)
+        for c in remaining
+        if c not in selected_set
+    }
     falsify_candidates = [
-        c for c in combos
-        if c not in remaining_set and combo_score[c] <= median_score
+        c for c in remaining
+        if c not in selected_set and combo_score[c] <= median_score
     ]
     falsify = []
     for _ in range(B_FALSIFY):
         best = max(
             falsify_candidates,
             key=lambda c: (
-                euclid(z[c], core_centroid),
-                min(euclid(z[c], z[s]) for s in selected),
-                -max_overlap(c, selected),
+                centroid_dist[c],
+                min_dist[c],
+                -overlap[c],
                 -combo_score[c],
                 tuple(-n for n in c),
             ),
         )
         falsify.append(best)
         selected.append(best)
+        selected_set.add(best)
         falsify_candidates.remove(best)
+
+        best_set = set(best)
+        for c in remaining:
+            if c in selected_set:
+                continue
+            min_dist[c] = min(min_dist[c], euclid(z[c], z[best]))
+            overlap[c] = max(overlap[c], len(set(c) & best_set))
 
     if len(selected) != 20 or len(set(selected)) != 20:
         raise RuntimeError("portfolio did not produce 20 unique tickets")
@@ -306,9 +338,10 @@ def portfolio_bundle(
         "diversify": [list(t) for t in diversify],
         "falsify": [list(t) for t in falsify],
         "median_combo_score": median_score,
+        "candidate_sample_size": len(combos),
+        "core_duplicate_repairs": core_attempt,
     }
     return selected, trace
-
 
 def pairwise_overlap_mean(tickets: list[tuple[int, ...]]) -> float:
     vals = []
