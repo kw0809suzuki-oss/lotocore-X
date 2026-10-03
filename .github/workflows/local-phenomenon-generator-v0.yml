@@ -1,0 +1,30 @@
+name: local-phenomenon-generator-v0-smoke
+
+on:
+  push:
+    branches:
+      - local-phenomenon-generator-v0
+    paths:
+      - "phenomenon_generator/**"
+      - ".github/workflows/local-phenomenon-generator-v0.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        working-directory: phenomenon_generator
+        run: python -m unittest test_generator.py
+      - name: Compile
+        run: python -m py_compile phenomenon_generator/generator.py phenomenon_generator/cli.py
+      - name: Run example recipes
+        working-directory: phenomenon_generator
+        run: |
+          python cli.py examples/324_326.json > /tmp/324_326.json
+          python cli.py examples/287_289.json > /tmp/287_289.json
+          python cli.py examples/309_310.json > /tmp/309_310.json
