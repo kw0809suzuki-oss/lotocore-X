@@ -19,12 +19,13 @@ jobs:
           python-version: "3.11"
       - name: Unit tests
         working-directory: phenomenon_generator
-        run: python -m unittest test_generator.py
+        run: python -m unittest discover -p "test_*.py"
       - name: Compile
-        run: python -m py_compile phenomenon_generator/generator.py phenomenon_generator/cli.py
-      - name: Run example recipes
+        run: python -m py_compile phenomenon_generator/generator.py phenomenon_generator/cli.py phenomenon_generator/audit_examples.py
+      - name: Run all example recipes
         working-directory: phenomenon_generator
         run: |
-          python cli.py examples/324_326.json > /tmp/324_326.json
-          python cli.py examples/287_289.json > /tmp/287_289.json
-          python cli.py examples/309_310.json > /tmp/309_310.json
+          for f in examples/*.json; do python cli.py "$f" > /tmp/$(basename "$f"); done
+      - name: Audit example edit sizes
+        working-directory: phenomenon_generator
+        run: python audit_examples.py
