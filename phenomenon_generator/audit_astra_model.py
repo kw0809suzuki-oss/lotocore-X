@@ -35,8 +35,8 @@ def classify_structure(s: dict) -> dict:
 
     if s["id"] == "S4_blank_reentry_parallel_persistence":
         return {
-            "status": "PARTIAL",
-            "reason": "blank and point constraints exist separately; coordinated lifecycle across draws is not yet modeled"
+            "status": "SUPPORTED_OBSERVATION",
+            "reason": "blank formation, next-draw reentry, and parallel point persistence are now observable as separate components in blank_lifecycle.py; no causal link is asserted"
         }
 
     if s["id"] == "S5_partial_shape_scope":
