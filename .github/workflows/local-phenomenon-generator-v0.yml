@@ -27,4 +27,4 @@ jobs:
       - name: Fetch LOTO7 history
         run: python fetch_loto7.py --limit 180
       - name: Random20 vs Astra20 play
-        run: python phenomenon_generator/compare_random_vs_astra_play.py --csv data/loto7.csv --last-n 100 --seed 20261004
+        run: python phenomenon_generator/batch_random_vs_astra_play.py
