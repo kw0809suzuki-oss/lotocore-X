@@ -1,0 +1,33 @@
+{
+  "name": "324-326 fixed-pair and surrounding rewrite",
+  "purpose": "17・18を残し、周囲5点だけを書き換える局所例を再現する",
+  "initial": [9, 13, 16, 17, 18, 19, 20],
+  "steps": [
+    {
+      "label": "325",
+      "preserve": [
+        {"type": "points", "values": [17, 18]}
+      ],
+      "operations": [
+        {
+          "type": "reallocate",
+          "remove": [9, 13, 16, 19, 20],
+          "add": [4, 14, 21, 31, 33]
+        }
+      ]
+    },
+    {
+      "label": "326",
+      "preserve": [
+        {"type": "points", "values": [17, 18]}
+      ],
+      "operations": [
+        {
+          "type": "reallocate",
+          "remove": [4, 14, 21, 31, 33],
+          "add": [1, 2, 24, 27, 29]
+        }
+      ]
+    }
+  ]
+}
