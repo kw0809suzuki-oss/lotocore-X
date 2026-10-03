@@ -1,0 +1,11 @@
+{
+  "name": "93-95 one-point persistence",
+  "purpose": "30だけを残し、周囲6点が大きく書き換わる局所例を再現する",
+  "initial": [2,5,11,14,17,30,32],
+  "steps": [
+    {"label":"94","preserve":[{"type":"points","values":[30]}],
+     "operations":[{"type":"reallocate","remove":[2,5,11,14,17,32],"add":[13,19,20,27,28,29]}]},
+    {"label":"95","preserve":[{"type":"points","values":[30]}],
+     "operations":[{"type":"reallocate","remove":[19,20,27,28,29],"add":[1,8,14,18,34]}]}
+  ]
+}
