@@ -41,8 +41,8 @@ def classify_structure(s: dict) -> dict:
 
     if s["id"] == "S5_partial_shape_scope":
         return {
-            "status": "NOT_YET",
-            "reason": "current gaps validator requires full exact gap list; partial gap subsequence/scope is not implemented"
+            "status": "SUPPORTED_OBSERVATION",
+            "reason": "partial gap subsequences and uniform translated subsets are now observable in partial_gap_scope.py; this is not a whole-layout preserve rule"
         }
 
     return {"status": "UNKNOWN", "reason": "unclassified"}
