@@ -1,0 +1,52 @@
+name: Diversify Face Outer10 v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-controller-v1-validation-20261003
+    paths:
+      - "coverage_lab/diversify_face_outer10_v0.py"
+      - "coverage_lab/diversify_face_outer10_v0_aggregate.py"
+      - ".github/workflows/diversify-face-outer10-v0.yml"
+
+jobs:
+  outer:
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        world: [1,2,3,4,5,6,7,8,9,10]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: pip install pandas
+      - name: Run fixed face probe
+        run: python coverage_lab/diversify_face_outer10_v0.py --world-id ${{ matrix.world }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diversify-face-outer10-world-${{ matrix.world }}
+          path: results/diversify_face_outer10_v0/world_*.json
+
+  aggregate:
+    needs: outer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diversify-face-outer10-world-*
+          path: artifacts
+      - name: Aggregate fixed outer10
+        run: python coverage_lab/diversify_face_outer10_v0_aggregate.py
+      - name: Show summary
+        run: cat results/diversify_face_outer10_v0/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diversify-face-outer10-v0
+          path: results/diversify_face_outer10_v0/summary.json
