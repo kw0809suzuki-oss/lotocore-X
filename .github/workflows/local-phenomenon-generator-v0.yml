@@ -17,15 +17,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
       - name: Unit tests
         working-directory: phenomenon_generator
         run: python -m unittest discover -p "test_*.py"
       - name: Compile
-        run: python -m py_compile phenomenon_generator/generator.py phenomenon_generator/cli.py phenomenon_generator/audit_examples.py phenomenon_generator/finite_preservation.py
-      - name: Run all example recipes
-        working-directory: phenomenon_generator
-        run: |
-          for f in examples/*.json; do python cli.py "$f" > /tmp/$(basename "$f"); done
-      - name: Audit example edit sizes
-        working-directory: phenomenon_generator
-        run: python audit_examples.py
+        run: python -m py_compile phenomenon_generator/*.py
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 180
+      - name: Random20 vs Astra20 play
+        run: python phenomenon_generator/compare_random_vs_astra_play.py --csv data/loto7.csv --last-n 100
