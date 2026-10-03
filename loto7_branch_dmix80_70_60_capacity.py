@@ -20,9 +20,21 @@ for a in NUMS:
         PAIR_INDEX[(a,b)]=k; k+=1
 NP=k
 
+PAYOUT_4=1400
+PAYOUT_5=6500
+
 def hit5(tickets,actual):
     a=set(actual)
     return int(any(len(a.intersection(t))>=5 for t in tickets))
+
+def cashback45(tickets,actual):
+    a=set(actual)
+    h4=h5=0
+    for t in tickets:
+        h=len(a.intersection(t))
+        if h==4: h4+=1
+        elif h==5: h5+=1
+    return h4,h5,h4*PAYOUT_4+h5*PAYOUT_5
 
 def point_state(nums):
     return sum(nums)/7.0, nums[-1]-nums[0]
@@ -126,7 +138,10 @@ def run_world(wid):
         d=draws[j]; longq.append(d); recq.append(d); longc.update(d); recc.update(d)
         if len(recq)>20: recc.subtract(recq.popleft())
         for n in d:last[n]=j
-    totals={s:dict(n80=0,n70=0,n60=0,points=0) for s in SEEDS}
+    totals={s:dict(n80=0,n70=0,n60=0,points=0,
+                   h4_80=0,h5_80=0,cash80=0,
+                   h4_70=0,h5_70=0,cash70=0,
+                   h4_60=0,h5_60=0,cash60=0) for s in SEEDS}
     for i in range(WARMUP,DRAWS):
         actual=draws[i]
         b40=branch_from_history(draws,states,trans,i,40)
@@ -144,6 +159,12 @@ def run_world(wid):
                 totals[s]["n80"]+=hit5(raw80,actual)
                 totals[s]["n70"]+=hit5(c70,actual)
                 totals[s]["n60"]+=hit5(c60,actual)
+                a4,a5,ac=cashback45(raw80,actual)
+                totals[s]["h4_80"]+=a4; totals[s]["h5_80"]+=a5; totals[s]["cash80"]+=ac
+                a4,a5,ac=cashback45(c70,actual)
+                totals[s]["h4_70"]+=a4; totals[s]["h5_70"]+=a5; totals[s]["cash70"]+=ac
+                a4,a5,ac=cashback45(c60,actual)
+                totals[s]["h4_60"]+=a4; totals[s]["h5_60"]+=a5; totals[s]["cash60"]+=ac
         longq.append(actual); longc.update(actual)
         if len(longq)>100: longc.subtract(longq.popleft())
         recq.append(actual); recc.update(actual)
@@ -179,10 +200,12 @@ def main():
 
     families=[]
     for s in SEEDS:
-        vals={name:sum(totals[s][name] for _,totals in rows) for name in ("n80","n70","n60")}
+        vals={name:sum(totals[s][name] for _,totals in rows) for name in
+              ("n80","n70","n60","h4_80","h5_80","cash80","h4_70","h5_70","cash70","h4_60","h5_60","cash60")}
+        points=sum(point_counts)
         families.append({
             "seed":s,
-            "evaluation_points":sum(point_counts),
+            "evaluation_points":points,
             "union80":vals["n80"],
             "union70":vals["n70"],
             "union60":vals["n60"],
@@ -191,10 +214,19 @@ def main():
             "diff80_vs_random":vals["n80"]-random_summary["80"]["median"],
             "diff70_vs_random":vals["n70"]-random_summary["70"]["median"],
             "diff60_vs_random":vals["n60"]-random_summary["60"]["median"],
+            "cashback80_yen_per_draw":vals["cash80"]/points,
+            "cashback70_yen_per_draw":vals["cash70"]/points,
+            "cashback60_yen_per_draw":vals["cash60"]/points,
+            "match4_80_per_draw":vals["h4_80"]/points,
+            "match5_80_per_draw":vals["h5_80"]/points,
+            "match4_70_per_draw":vals["h4_70"]/points,
+            "match5_70_per_draw":vals["h5_70"]/points,
+            "match4_60_per_draw":vals["h4_60"]/points,
+            "match5_60_per_draw":vals["h5_60"]/points,
         })
 
     out={
-        "experiment":"loto7_branch_dmix80_70_60_capacity_v1",
+        "experiment":"loto7_branch_dmix80_70_60_capacity_v2_cashback45",
         "world_ids":[WORLD_IDS[0],WORLD_IDS[-1]],
         "worlds":len(WORLD_IDS),
         "seeds":SEEDS,
@@ -202,6 +234,12 @@ def main():
         "compression":{
             "70":"35 BRANCH + 35 D-mix; same number-use/pair-reuse score",
             "60":"30 BRANCH + 30 D-mix; same number-use/pair-reuse score"
+        },
+        "cashback_basis":{
+            "scope":"exact 4-main and exact 5-main matches only; bonus numbers not simulated",
+            "match4_yen":PAYOUT_4,
+            "match5_yen":PAYOUT_5,
+            "source_note":"LOTO7 theoretical payouts from draw 613 onward; actual payout varies by draw"
         },
         "random":random_summary,
         "families":families,
@@ -214,6 +252,12 @@ def main():
             "mean_diff80_vs_random":statistics.mean(f["diff80_vs_random"] for f in families),
             "mean_diff70_vs_random":statistics.mean(f["diff70_vs_random"] for f in families),
             "mean_diff60_vs_random":statistics.mean(f["diff60_vs_random"] for f in families),
+            "mean_cashback80_yen_per_draw":statistics.mean(f["cashback80_yen_per_draw"] for f in families),
+            "mean_cashback70_yen_per_draw":statistics.mean(f["cashback70_yen_per_draw"] for f in families),
+            "mean_cashback60_yen_per_draw":statistics.mean(f["cashback60_yen_per_draw"] for f in families),
+            "purchase_cost80_yen":80*300,
+            "purchase_cost70_yen":70*300,
+            "purchase_cost60_yen":60*300,
         },
         "boundary":"Observed Calculation only. No cause analysis, tuning, or adoption."
     }
