@@ -28,6 +28,10 @@ def hit5(tickets,actual):
     return int(any(len(a.intersection(t))>=5 for t in tickets))
 
 def cashback45(tickets,actual):
+    # Legacy synthetic cashback helper.
+    # IMPORTANT: this is not a full LOTO7 prize model because the current
+    # synthetic draw generator has main numbers only and no bonus numbers.
+    # Keep only for backward comparability of existing probes.
     a=set(actual)
     h4=h5=0
     for t in tickets:
@@ -35,6 +39,12 @@ def cashback45(tickets,actual):
         if h==4: h4+=1
         elif h==5: h5+=1
     return h4,h5,h4*PAYOUT_4+h5*PAYOUT_5
+
+# Future cashback/prize probes must generate a complete draw:
+#   7 main numbers + 2 bonus numbers, sampled without replacement.
+# Prize classification must use both main and bonus matches before computing
+# ticket counts, payout totals, and return rate. Do not treat cashback45()
+# as an exact real-world cashback estimate.
 
 def point_state(nums):
     return sum(nums)/7.0, nums[-1]-nums[0]
@@ -236,10 +246,10 @@ def main():
             "60":"30 BRANCH + 30 D-mix; same number-use/pair-reuse score"
         },
         "cashback_basis":{
-            "scope":"exact 4-main and exact 5-main matches only; bonus numbers not simulated",
+            "scope":"LEGACY APPROXIMATION: exact 4-main and exact 5-main matches only; bonus numbers not simulated",
             "match4_yen":PAYOUT_4,
             "match5_yen":PAYOUT_5,
-            "source_note":"LOTO7 theoretical payouts from draw 613 onward; actual payout varies by draw"
+            "source_note":"Not an exact real-world cashback estimate. Future prize probes must simulate 7 main + 2 bonus numbers and classify prizes with both."
         },
         "random":random_summary,
         "families":families,
