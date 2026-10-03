@@ -1,0 +1,11 @@
+{
+  "name": "269-271 two-point persistence",
+  "purpose": "1と15を残し、周囲だけが縮小・再拡張する局所例を再現する",
+  "initial": [1,9,15,24,31,33,36],
+  "steps": [
+    {"label":"270","preserve":[{"type":"points","values":[1,15]}],
+     "operations":[{"type":"reallocate","remove":[9,31,33,36],"add":[2,11,13,25]}]},
+    {"label":"271","preserve":[{"type":"points","values":[1,15]}],
+     "operations":[{"type":"reallocate","remove":[2,11,13,24,25],"add":[9,16,19,32,35]}]}
+  ]
+}
