@@ -1,0 +1,25 @@
+name: LOTO7 Portfolio Same Generator Mix Probe v0
+
+on:
+  push:
+    branches:
+      - 'experiment/generation-freedom-controller-v1-validation-20261003'
+    paths:
+      - 'coverage_lab/loto7_portfolio_same_generator_mix_probe_v0.py'
+      - '.github/workflows/loto7-portfolio-same-generator-mix-probe-v0.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python coverage_lab/loto7_portfolio_same_generator_mix_probe_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-portfolio-same-generator-mix-probe-v0
+          path: results/loto7_portfolio_same_generator_mix_probe_v0.json
