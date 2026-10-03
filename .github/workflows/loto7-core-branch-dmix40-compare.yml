@@ -1,0 +1,26 @@
+name: LOTO7 CORE BRANCH D-mix 40 Compare
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - loto7-core-branch-dmix20-compare
+    paths:
+      - 'loto7_core_branch_dmix40_compare.py'
+      - '.github/workflows/loto7-core-branch-dmix40-compare.yml'
+
+jobs:
+  compare40:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy
+      - name: Run 50-world 40-ticket comparison
+        run: python loto7_core_branch_dmix40_compare.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-core-branch-dmix40-compare
+          path: results/loto7_core_branch_dmix40_compare.json
