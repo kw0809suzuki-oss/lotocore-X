@@ -1,0 +1,26 @@
+name: LOTO7 CORE BRANCH D-mix 20 Compare
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - loto7-core-branch-dmix20-compare
+    paths:
+      - 'loto7_core_branch_dmix20_compare.py'
+      - '.github/workflows/loto7-core-branch-dmix20-compare.yml'
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy
+      - name: Run 50-world comparison
+        run: python loto7_core_branch_dmix20_compare.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-core-branch-dmix20-compare
+          path: results/loto7_core_branch_dmix20_compare.json
