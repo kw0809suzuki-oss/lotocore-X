@@ -4,8 +4,11 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import lotocore
 from coverage_lab.loto7_portfolio20_v0 import (
