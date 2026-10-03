@@ -1,0 +1,25 @@
+name: LOTO7 Portfolio Coexistence Step1 v0
+
+on:
+  push:
+    branches:
+      - 'experiment/generation-freedom-controller-v1-validation-20261003'
+    paths:
+      - 'coverage_lab/loto7_portfolio_coexistence_step1_v0.py'
+      - '.github/workflows/loto7-portfolio-coexistence-step1-v0.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python coverage_lab/loto7_portfolio_coexistence_step1_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-portfolio-coexistence-step1-v0
+          path: results/loto7_portfolio_coexistence_step1_v0.json
