@@ -1,0 +1,31 @@
+name: Generation Freedom Controller v1 vs Random Exact
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-controller-v1-validation-20261003
+    paths:
+      - "coverage_lab/generation_freedom_controller_v1_vs_random_exact.py"
+      - ".github/workflows/generation-freedom-controller-v1-vs-random-exact.yml"
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: pip install pandas
+      - name: Compare Controller v1 with exact random baselines
+        run: python coverage_lab/generation_freedom_controller_v1_vs_random_exact.py
+      - name: Show result
+        run: cat results/generation_freedom_controller_v1_vs_random_exact.json
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: generation-freedom-controller-v1-vs-random-exact
+          path: results/generation_freedom_controller_v1_vs_random_exact.json
