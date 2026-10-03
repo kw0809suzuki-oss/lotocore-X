@@ -1,0 +1,27 @@
+name: LOTO7 BRANCH CORE 60-to-40 Probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - loto7-branch-core60-to40-probe
+    paths:
+      - 'loto7_branch_core60_to40_probe.py'
+      - '.github/workflows/loto7-branch-core60-to40-probe.yml'
+
+jobs:
+  branch-core-60-to-40:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install runtime dependency
+        run: pip install numpy
+      - name: Run frozen 50-world probe
+        run: python loto7_branch_core60_to40_probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-branch-core60-to40-result
+          path: results/loto7_branch_core60_to40_probe.json
