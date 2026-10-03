@@ -1,0 +1,234 @@
+{
+  "source": "Astra external reread",
+  "range": {
+    "first_round": 1,
+    "last_round": 697
+  },
+  "source_boundary": {
+    "primary": "https://www.takarakuji-loto7.jp/LotoNumber/HistoryPartOutPut",
+    "secondary": "https://lotowins.com/pastloto/pastloto7/",
+    "corrected_secondary_rounds": [
+      370,
+      406,
+      594,
+      640
+    ],
+    "authority": "primary values used for corrected rounds"
+  },
+  "observations": [
+    {
+      "id": "astra_partial_gap_lifetime_041_045",
+      "kind": "partial_gap_lifetime",
+      "rounds": [
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "evidence": [
+        {
+          "round": 41,
+          "members": [
+            34,
+            35,
+            36
+          ],
+          "gaps": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": 42,
+          "members": [
+            15,
+            16,
+            17
+          ],
+          "gaps": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": 43,
+          "members": [
+            6,
+            7,
+            8
+          ],
+          "gaps": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": 44,
+          "members": [
+            27,
+            28,
+            29
+          ],
+          "gaps": [
+            1,
+            1
+          ]
+        }
+      ],
+      "break_round": 45,
+      "observation": "Three-point local gap [1,1] appears in different positions for four consecutive draws, then breaks.",
+      "boundary": "Same object movement is not established."
+    },
+    {
+      "id": "astra_overlap_temporal_paths_008_010",
+      "kind": "coexisting_temporal_paths",
+      "rounds": [
+        8,
+        9,
+        10
+      ],
+      "paths": [
+        {
+          "number": 2,
+          "path": [
+            "present",
+            "absent",
+            "present"
+          ]
+        },
+        {
+          "number": 28,
+          "path": [
+            "present",
+            "absent",
+            "present"
+          ]
+        },
+        {
+          "number": 30,
+          "path": [
+            "present",
+            "present",
+            "present"
+          ]
+        }
+      ],
+      "observation": "Return-after-absence and continuous persistence coexist in the same short interval.",
+      "boundary": "Joint reappearance does not establish coupling."
+    },
+    {
+      "id": "astra_point_persistence_context_rewrite_694_697",
+      "kind": "point_persistence_context_change",
+      "rounds": [
+        694,
+        695,
+        696,
+        697
+      ],
+      "member": 24,
+      "local_context": [
+        {
+          "round": 694,
+          "left": 13,
+          "right": 26,
+          "left_gap": 11,
+          "right_gap": 2
+        },
+        {
+          "round": 695,
+          "left": 22,
+          "right": 34,
+          "left_gap": 2,
+          "right_gap": 10
+        },
+        {
+          "round": 696,
+          "left": 23,
+          "right": 34,
+          "left_gap": 1,
+          "right_gap": 10
+        }
+      ],
+      "break_round": 697,
+      "observation": "The point persists while its local left/right distance relation changes, then the point disappears."
+    },
+    {
+      "id": "astra_blank_reentry_471_473",
+      "kind": "blank_then_reentry_with_parallel_persistence",
+      "rounds": [
+        471,
+        472,
+        473
+      ],
+      "observation": "A central blank region forms and is re-entered next draw while a high-side point persists across the latter transition.",
+      "details": {
+        "blank_round": 472,
+        "blank_interval": [
+          9,
+          31
+        ],
+        "reentry_round": 473,
+        "reentry_numbers": [
+          11,
+          21,
+          24,
+          28
+        ],
+        "persistent_number_across_472_473": 33
+      },
+      "boundary": "Blank space is not treated as a causal attractor."
+    },
+    {
+      "id": "astra_partial_shape_boundary_692_694",
+      "kind": "partial_shape_similarity_and_break",
+      "rounds": [
+        692,
+        693,
+        694
+      ],
+      "gaps": {
+        "692": [
+          2,
+          6,
+          3,
+          2,
+          8,
+          3
+        ],
+        "693": [
+          1,
+          5,
+          1,
+          2,
+          8,
+          2
+        ],
+        "694": [
+          10,
+          11,
+          2,
+          4,
+          1,
+          5
+        ]
+      },
+      "translated_subset": {
+        "from": [
+          18,
+          20,
+          28
+        ],
+        "to": [
+          23,
+          25,
+          33
+        ],
+        "delta": 5
+      },
+      "observation": "Partial gap relation persists between 692 and 693 despite zero common numbers; it does not continue into 694.",
+      "boundary": "Similarity scope must be stated; whole-layout equivalence is not claimed."
+    }
+  ],
+  "global_boundary": "These observations show describable local structure only; frequency above chance, causality, shared mechanism, and predictive value are unconfirmed."
+}
