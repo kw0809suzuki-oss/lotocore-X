@@ -1,0 +1,26 @@
+name: LOTO7 BRANCH D-mix 80 70 60 Capacity
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - loto7-branch-dmix80-70-60-capacity
+    paths:
+      - 'loto7_branch_dmix80_70_60_capacity.py'
+      - '.github/workflows/loto7-branch-dmix80-70-60-capacity.yml'
+
+jobs:
+  capacity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy
+      - name: Run 50-world capacity probe
+        run: python loto7_branch_dmix80_70_60_capacity.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-branch-dmix80-70-60-capacity
+          path: results/loto7_branch_dmix80_70_60_capacity.json
