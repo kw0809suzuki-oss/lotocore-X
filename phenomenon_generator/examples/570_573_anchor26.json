@@ -1,0 +1,13 @@
+{
+  "name": "570-573 one-point anchor with side changes",
+  "purpose": "26を残しながら周囲6点が複数回入れ替わる局所例を再現する",
+  "initial": [1,3,9,12,25,26,35],
+  "steps": [
+    {"label":"571","preserve":[{"type":"points","values":[26]}],
+     "operations":[{"type":"reallocate","remove":[1,3,9,12,25,35],"add":[13,27,29,30,34,37]}]},
+    {"label":"572","preserve":[{"type":"points","values":[26]}],
+     "operations":[{"type":"reallocate","remove":[13,27,29,30,34,37],"add":[1,2,4,19,21,28]}]},
+    {"label":"573","preserve":[{"type":"points","values":[26]}],
+     "operations":[{"type":"reallocate","remove":[1,2,4,21,28],"add":[11,12,18,23,31]}]}
+  ]
+}
