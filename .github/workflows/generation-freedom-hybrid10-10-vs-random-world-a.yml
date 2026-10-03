@@ -1,0 +1,30 @@
+name: Generation Freedom Hybrid10+10 vs Random World A
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-controller-v1-validation-20261003
+    paths:
+      - "coverage_lab/generation_freedom_hybrid10_10_vs_random_world_a.py"
+      - ".github/workflows/generation-freedom-hybrid10-10-vs-random-world-a.yml"
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: pip install pandas
+      - name: Run fixed Hybrid10+10 comparison
+        run: python coverage_lab/generation_freedom_hybrid10_10_vs_random_world_a.py
+      - name: Show result
+        run: cat results/generation_freedom_hybrid10_10_vs_random_world_a.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generation-freedom-hybrid10-10-vs-random-world-a
+          path: results/generation_freedom_hybrid10_10_vs_random_world_a.json
