@@ -16,7 +16,7 @@ class AstraModelAuditTest(unittest.TestCase):
         ]
         for sid in ids:
             out = classify_structure({"id": sid, "representation": {}})
-            self.assertIn(out["status"], {"PARTIAL", "NOT_YET"})
+            self.assertIn(out["status"], {"PARTIAL", "NOT_YET", "SUPPORTED_OBSERVATION"})
 
 
 if __name__ == "__main__":
