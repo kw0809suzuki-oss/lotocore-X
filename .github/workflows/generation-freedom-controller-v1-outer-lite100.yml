@@ -1,0 +1,52 @@
+name: Generation Freedom Controller v1 Outer Lite100
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-controller-v1-validation-20261003
+    paths:
+      - "coverage_lab/generation_freedom_controller_v1_outer_lite100.py"
+      - "coverage_lab/generation_freedom_controller_v1_outer_lite100_aggregate.py"
+      - ".github/workflows/generation-freedom-controller-v1-outer-lite100.yml"
+
+jobs:
+  outer-lite100:
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: pip install pandas
+      - name: Run outer shard
+        run: python coverage_lab/generation_freedom_controller_v1_outer_lite100.py --shard-id ${{ matrix.shard }} --num-shards 20
+      - uses: actions/upload-artifact@v4
+        with:
+          name: controller-v1-outer-lite100-shard-${{ matrix.shard }}
+          path: results/controller_v1_outer_lite100/shard_*.json
+
+  aggregate:
+    needs: outer-lite100
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: controller-v1-outer-lite100-shard-*
+          path: artifacts
+      - name: Aggregate
+        run: python coverage_lab/generation_freedom_controller_v1_outer_lite100_aggregate.py
+      - name: Show summary
+        run: cat results/controller_v1_outer_lite100/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generation-freedom-controller-v1-outer-lite100
+          path: results/controller_v1_outer_lite100/summary.json
