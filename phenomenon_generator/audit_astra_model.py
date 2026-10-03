@@ -23,8 +23,8 @@ def classify_structure(s: dict) -> dict:
 
     if s["id"] == "S2_temporal_path_coexistence":
         return {
-            "status": "NOT_YET",
-            "reason": "requires explicit multi-draw temporal path representation; current generator is transition-centric"
+            "status": "SUPPORTED_OBSERVATION",
+            "reason": "explicit multi-draw presence paths are now represented and testable in temporal_paths.py; this is not yet a generation rule"
         }
 
     if s["id"] == "S3_point_vs_context":
