@@ -29,8 +29,8 @@ def classify_structure(s: dict) -> dict:
 
     if s["id"] == "S3_point_vs_context":
         return {
-            "status": "PARTIAL",
-            "reason": "point preservation exists, but mutable neighbor-context tracking is not a first-class structure"
+            "status": "SUPPORTED_OBSERVATION",
+            "reason": "point persistence and mutable left/right local context are now observable separately in point_context.py; this does not promote the point to an anchor or cause"
         }
 
     if s["id"] == "S4_blank_reentry_parallel_persistence":
