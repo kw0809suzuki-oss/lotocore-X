@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Outer Lite100 validation trigger.
 from __future__ import annotations
 
 import argparse
