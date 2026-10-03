@@ -27,7 +27,7 @@ jobs:
         run: |
           python coverage_lab/generation_freedom_observer_v0.py \
             --data coverage_lab/fixtures/loto7_1_696.csv \
-            --rounds 134,249,374
+            --rounds "$(seq -s, 101 696)"
 
       - name: Show manifest
         run: cat results/generation_freedom_observer_v0.json
