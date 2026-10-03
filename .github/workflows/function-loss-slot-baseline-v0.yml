@@ -1,0 +1,28 @@
+name: Function Loss Slot Baseline v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-controller-v1-validation-20261003
+    paths:
+      - "coverage_lab/function_loss_slot_baseline_v0.py"
+      - ".github/workflows/function-loss-slot-baseline-v0.yml"
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: pip install pandas
+      - name: Run full-history slot baseline
+        run: python coverage_lab/function_loss_slot_baseline_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: function-loss-slot-baseline-v0
+          path: results/function_loss_slot_baseline_v0.json
