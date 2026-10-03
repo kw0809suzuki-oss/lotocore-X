@@ -1,0 +1,11 @@
+{
+  "name": "343-345 fixed pair with changing surroundings",
+  "purpose": "31・32を残しながら周囲が段階的に書き換わる局所例を再現する",
+  "initial": [17,19,22,29,30,31,32],
+  "steps": [
+    {"label":"344","preserve":[{"type":"points","values":[31,32]}],
+     "operations":[{"type":"reallocate","remove":[17,22,30],"add":[11,28,37]}]},
+    {"label":"345","preserve":[{"type":"points","values":[31,32]}],
+     "operations":[{"type":"reallocate","remove":[11,19,29,37],"add":[6,9,10,18]}]}
+  ]
+}
