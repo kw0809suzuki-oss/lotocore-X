@@ -1,0 +1,42 @@
+name: Irrecoverable Loss Observer v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-controller-v1-validation-20261003
+    paths:
+      - "coverage_lab/irrecoverable_loss_observer_v0.py"
+      - ".github/workflows/irrecoverable-loss-observer-v0.yml"
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: pip install pandas
+      - name: Run observer
+        run: python coverage_lab/irrecoverable_loss_observer_v0.py
+      - name: Show compact result
+        run: python - <<'PY'
+          import json
+          p=json.load(open("results/irrecoverable_loss_observer_v0.json"))
+          for r in p["rounds"]:
+              o=r["outcome_overlay"]
+              print(r["round"], r["event"])
+              for x in o["lost_winning_structured_metrics"]:
+                  f=x["primary_function"]
+                  print(" LOST",x["index0"],f["lost_unique_triples"],f["lost_unique_quadruples"],f["distinct_legal_core18_replacements_restoring_both"])
+              for x in o["incoming_hybrid_winner_metrics"]:
+                  f=x["primary_function"]
+                  print(" IN",x["index0"],x["role"],f["lost_unique_triples"],f["lost_unique_quadruples"],f["distinct_legal_core18_replacements_restoring_both"])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: irrecoverable-loss-observer-v0
+          path: results/irrecoverable_loss_observer_v0.json
