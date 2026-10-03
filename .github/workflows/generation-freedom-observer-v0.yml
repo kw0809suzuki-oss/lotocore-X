@@ -1,0 +1,41 @@
+name: Generation Freedom Observer v0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/generation-freedom-observer-v0-20261003
+    paths:
+      - "coverage_lab/generation_freedom_observer_v0.py"
+      - ".github/workflows/generation-freedom-observer-v0.yml"
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal dependencies
+        run: pip install pandas
+
+      - name: Run observation-only probe
+        run: |
+          python coverage_lab/generation_freedom_observer_v0.py \
+            --data coverage_lab/fixtures/loto7_1_696.csv \
+            --rounds 134,249,374
+
+      - name: Show manifest
+        run: cat results/generation_freedom_observer_v0.json
+
+      - name: Upload observer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generation-freedom-observer-v0
+          path: |
+            results/generation_freedom_observer_v0.csv
+            results/generation_freedom_observer_v0.json
