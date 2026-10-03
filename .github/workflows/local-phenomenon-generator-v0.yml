@@ -21,7 +21,7 @@ jobs:
         working-directory: phenomenon_generator
         run: python -m unittest discover -p "test_*.py"
       - name: Compile
-        run: python -m py_compile phenomenon_generator/generator.py phenomenon_generator/cli.py phenomenon_generator/audit_examples.py
+        run: python -m py_compile phenomenon_generator/generator.py phenomenon_generator/cli.py phenomenon_generator/audit_examples.py phenomenon_generator/finite_preservation.py
       - name: Run all example recipes
         working-directory: phenomenon_generator
         run: |
