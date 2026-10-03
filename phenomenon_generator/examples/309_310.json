@@ -1,0 +1,28 @@
+{
+  "name": "309-310 width-preserving opposite-side jump",
+  "purpose": "全幅をほぼ保ちながら低側から高側へ配置全体を移す局所例を再現する",
+  "initial": [1, 7, 13, 14, 16, 21, 22],
+  "steps": [
+    {
+      "label": "310",
+      "preserve": [
+        {"type": "width", "value": 20, "tolerance": 0}
+      ],
+      "operations": [
+        {
+          "type": "translate",
+          "delta": 15,
+          "offsets": {
+            "1": 1,
+            "7": 3,
+            "13": -2,
+            "14": -1,
+            "16": 0,
+            "21": -4,
+            "22": 0
+          }
+        }
+      ]
+    }
+  ]
+}
