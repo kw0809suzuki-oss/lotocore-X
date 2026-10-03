@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Full-history observation trigger: logic unchanged.
 from __future__ import annotations
 
 import argparse
