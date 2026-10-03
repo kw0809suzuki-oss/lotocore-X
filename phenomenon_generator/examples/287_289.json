@@ -1,0 +1,29 @@
+{
+  "name": "287-289 disappear and rereference",
+  "purpose": "一度消えた複数点を二回前から再参照して戻す局所例を再現する",
+  "initial": [2, 7, 10, 20, 24, 29, 34],
+  "steps": [
+    {
+      "label": "288",
+      "operations": [
+        {
+          "type": "reallocate",
+          "remove": [2, 7, 10, 20, 24, 29, 34],
+          "add": [1, 8, 9, 16, 27, 32, 37]
+        }
+      ]
+    },
+    {
+      "label": "289",
+      "operations": [
+        {
+          "type": "rereference",
+          "source_index": 0,
+          "source_values": [2, 7, 10, 34],
+          "remove_current": [1, 8, 9, 27, 32, 37],
+          "add_extra": [12, 17]
+        }
+      ]
+    }
+  ]
+}
