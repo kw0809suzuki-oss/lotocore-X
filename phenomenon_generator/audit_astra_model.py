@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-STRUCTURES = ROOT / "models" / "astra" / "structures" / "astra_structures_v0.json"
+STRUCTURES = ROOT / "models" / "loto7_astra_observation" / "structures" / "astra_structures_v0.json"
 
 SUPPORTED_NOW = {
     "exact_gaps",
@@ -57,7 +57,7 @@ def main() -> None:
             **classify_structure(s),
         })
     print(json.dumps({
-        "model": "Astra Model",
+        "model": "LOTO7 Astra Observation Model",
         "structure_count": len(rows),
         "classification": rows,
         "boundary": "This is an implementation-gap audit, not a decision to extend the generator."
