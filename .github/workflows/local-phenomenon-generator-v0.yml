@@ -28,3 +28,5 @@ jobs:
         run: python fetch_loto7.py --limit 180
       - name: Random20 vs Astra20 play
         run: python phenomenon_generator/batch_random_vs_astra_play.py
+      - name: Audit Astra Model
+        run: python phenomenon_generator/audit_astra_model.py
