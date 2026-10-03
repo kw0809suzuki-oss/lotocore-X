@@ -1,0 +1,26 @@
+name: LOTO7 Pair60 vs Cover60
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - loto7-pair-vs-cover60
+    paths:
+      - 'loto7_pair_vs_cover60.py'
+      - '.github/workflows/loto7-pair-vs-cover60.yml'
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy
+      - name: Run fresh 50-world comparison
+        run: python loto7_pair_vs_cover60.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-pair-vs-cover60
+          path: results/loto7_pair_vs_cover60.json
