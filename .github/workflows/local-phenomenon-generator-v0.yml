@@ -25,8 +25,10 @@ jobs:
       - name: Compile
         run: python -m py_compile phenomenon_generator/*.py
       - name: Fetch LOTO7 history
-        run: python fetch_loto7.py --limit 180
+        run: python fetch_loto7.py --limit 1000
       - name: Random20 vs Astra20 play
         run: python phenomenon_generator/batch_random_vs_astra_play.py
+      - name: Astra next-distance probe
+        run: python phenomenon_generator/next_distance_probe.py --random-samples 200
       - name: Audit Astra Model
         run: python phenomenon_generator/audit_astra_model.py
