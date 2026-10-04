@@ -17,8 +17,8 @@ def classify_structure(s: dict) -> dict:
 
     if s["id"] == "S1_partial_gap_lifetime":
         return {
-            "status": "PARTIAL",
-            "reason": "exact gaps are supported, but duration/break lifecycle is only partly represented by Finite Preservation State and not wired to the generator"
+            "status": "SUPPORTED_OBSERVATION",
+            "reason": "consecutive observation of a partial gap structure and its break round are now represented in structure_lifetime.py; this does not assert object continuity or a generation rule"
         }
 
     if s["id"] == "S2_temporal_path_coexistence":
