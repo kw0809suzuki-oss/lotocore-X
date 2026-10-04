@@ -30,10 +30,17 @@ jobs:
         run: python phenomenon_generator/batch_random_vs_astra_play.py
       - name: Astra next-distance probe
         run: python phenomenon_generator/next_distance_probe.py --random-samples 200 | tee astra-next-distance.txt
+      - name: Flow vs Astra observation comparison
+        run: python phenomenon_generator/compare_flow_astra_random.py --random-samples 500 | tee flow-astra-random.txt
       - name: Upload Astra next-distance result
         uses: actions/upload-artifact@v4
         with:
           name: astra-next-distance
           path: astra-next-distance.txt
+      - name: Upload Flow Astra Random result
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-astra-random
+          path: flow-astra-random.txt
       - name: Audit Astra Model
         run: python phenomenon_generator/audit_astra_model.py
