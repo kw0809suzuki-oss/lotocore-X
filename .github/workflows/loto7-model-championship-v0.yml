@@ -1,0 +1,26 @@
+name: LOTO7 Model Championship v0
+
+on:
+  push:
+    branches:
+      - experiment/loto7-model-championship-v0
+    paths:
+      - compare_loto7_model_championship_v0.py
+      - .github/workflows/loto7-model-championship-v0.yml
+  workflow_dispatch:
+
+jobs:
+  championship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pandas numpy
+      - name: Run GitHub-side championship
+        run: python compare_loto7_model_championship_v0.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-model-championship-v0
+          path: results/loto7_model_championship_v0_github.csv
