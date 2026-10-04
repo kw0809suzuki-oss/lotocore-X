@@ -28,16 +28,16 @@ def _ticket_from_carriers(
     return sorted(fixed + rest)
 
 
-def _model20(detections, seed: int, round_no: int, side_code: int) -> list[list[int]]:
+def _model_tickets(detections, seed: int, round_no: int, side_code: int, count: int) -> list[list[int]]:
     tickets = []
-    for j in range(20):
+    for j in range(count):
         d = detections[j % len(detections)]
         rng = random.Random(seed * 1_000_000 + round_no * 100 + side_code * 20 + j)
         tickets.append(_ticket_from_carriers(d.carriers, rng))
     return tickets
 
 
-def run(df: pd.DataFrame, seed: int = 20261004) -> dict:
+def run(df: pd.DataFrame, seed: int = 20261004, count: int = 20) -> dict:
     df = df.sort_values("round").reset_index(drop=True)
     history = [_draw(df.loc[i]) for i in range(len(df))]
     rows = []
@@ -53,9 +53,9 @@ def run(df: pd.DataFrame, seed: int = 20261004) -> dict:
         actual_round = int(df.loc[i + 1, "round"])
 
         rrng = random.Random(seed * 1_000_000 + trigger_round * 100)
-        random20 = [random_ticket(rrng) for _ in range(20)]
-        flow20 = _model20(flow_ds, seed, trigger_round, 1)
-        astra20 = _model20(astra_ds, seed, trigger_round, 2)
+        random_tickets = [random_ticket(rrng) for _ in range(count)]
+        flow_tickets = _model_tickets(flow_ds, seed, trigger_round, 1, count)
+        astra_tickets = _model_tickets(astra_ds, seed, trigger_round, 2, count)
 
         rows.append({
             "trigger_round": trigger_round,
@@ -63,13 +63,13 @@ def run(df: pd.DataFrame, seed: int = 20261004) -> dict:
             "actual": actual,
             "flow_signals": [d.kind for d in flow_ds],
             "astra_signals": [d.structure_id for d in astra_ds],
-            "random": evaluate_set(random20, actual),
-            "flow": evaluate_set(flow20, actual),
-            "astra": evaluate_set(astra20, actual),
+            "random": evaluate_set(random_tickets, actual),
+            "flow": evaluate_set(flow_tickets, actual),
+            "astra": evaluate_set(astra_tickets, actual),
             "sample_tickets": {
-                "random": random20[:3],
-                "flow": flow20[:3],
-                "astra": astra20[:3],
+                "random": random_tickets[:3],
+                "flow": flow_tickets[:3],
+                "astra": astra_tickets[:3],
             },
         })
 
@@ -101,15 +101,15 @@ def run(df: pd.DataFrame, seed: int = 20261004) -> dict:
         return {k: a[k] - b[k] for k in keys}
 
     return {
-        "name": "Random20 vs Flow20 vs Astra20 external next-draw comparison v0",
+        "name": f"Random{count} vs Flow{count} vs Astra{count} external next-draw comparison v0",
         "window": {
             "first_history_round": int(df.iloc[0]["round"]),
             "last_history_round": int(df.iloc[-1]["round"]),
             "common_fire_rounds": len(rows),
         },
-        "random20": random_agg,
-        "flow20": flow_agg,
-        "astra20": astra_agg,
+        "random": random_agg,
+        "flow": flow_agg,
+        "astra": astra_agg,
         "flow_minus_random": diff(flow_agg, random_agg) if rows else {},
         "astra_minus_random": diff(astra_agg, random_agg) if rows else {},
         "flow_minus_astra": diff(flow_agg, astra_agg) if rows else {},
@@ -128,10 +128,11 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--csv", default="data/loto7.csv")
     p.add_argument("--seed", type=int, default=20261004)
+    p.add_argument("--count", type=int, default=20)
     p.add_argument("--rows-out", default="")
     args = p.parse_args()
 
-    result = run(pd.read_csv(args.csv), args.seed)
+    result = run(pd.read_csv(args.csv), args.seed, args.count)
     if args.rows_out:
         with open(args.rows_out, "w", encoding="utf-8") as f:
             json.dump(result["round_rows"], f, ensure_ascii=False, indent=2)
