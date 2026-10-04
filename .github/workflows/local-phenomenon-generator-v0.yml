@@ -33,7 +33,7 @@ jobs:
       - name: Flow vs Astra observation comparison
         run: python phenomenon_generator/compare_flow_astra_random.py --random-samples 500 | tee flow-astra-random.txt
       - name: External Random Flow Astra play
-        run: python phenomenon_generator/external_threeway_play.py --seed 20261004 --rows-out external-threeway-rows.json | tee external-threeway-summary.txt
+        run: python phenomenon_generator/external_threeway_play.py --seed 20261004 --count 40 --rows-out external-threeway-rows.json | tee external-threeway-summary.txt
       - name: Upload Astra next-distance result
         uses: actions/upload-artifact@v4
         with:
