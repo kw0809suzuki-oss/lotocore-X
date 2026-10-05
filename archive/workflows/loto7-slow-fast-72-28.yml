@@ -1,0 +1,30 @@
+name: LOTO7 Slow Fast 72-28 Probe
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'probe_loto7_slow_fast_72_28.py'
+      - '.github/workflows/loto7-slow-fast-72-28.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Fetch fresh LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Run frozen 72-28 real and synthetic worlds
+        run: python probe_loto7_slow_fast_72_28.py
+      - name: Upload probe results
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-slow-fast-72-28-probe
+          path: |
+            results/loto7_slow_fast_72_28_probe.csv
+            results/loto7_slow_fast_72_28_summary.csv
