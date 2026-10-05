@@ -23,3 +23,9 @@
 - 採用・Cut・比較条件の変更は`.flow/decisions.md`へ追記する。
 - 一次結果を伴う実験だけ`.flow/runs/`へ記録する。
 - 次のスレッドが復帰するための最小情報だけを残す。
+
+## 2026-10-05｜Authority境界
+- `archive/` は過去Probe・旧workflowの保存域。現在Stateとして自動昇格させない。
+- repository 内の旧 `frozen` 名称を、現在プロジェクトの Frozen v0.1 と同一視しない。
+- Branch10 / Frozen v0.1 は、この repository に正本が存在すると確認できるまで外部Authorityとして扱う。
+- `.flow/current.json` の Phase10 は repository 内の保存Stateであり、プロジェクト全体の最新研究座標とは限らない。
