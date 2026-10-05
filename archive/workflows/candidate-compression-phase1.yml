@@ -1,0 +1,42 @@
+name: LOTO7 Candidate Compression Phase 1
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'coverage_lab/**'
+      - 'lotocore.py'
+      - 'x_agent.py'
+      - 'fetch_loto7.py'
+      - '.github/workflows/candidate-compression-phase1.yml'
+
+jobs:
+  phase1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Regression guard
+        run: python coverage_lab/regression_check.py --data data/loto7.csv --window 100 --last-n 20
+      - name: Generate Round Packets
+        run: python coverage_lab/generate_round_packets.py --data data/loto7.csv --window 100 --last-n 20 --out coverage_lab/packets
+      - name: Validate 40 packets
+        shell: bash
+        run: |
+          set -e
+          count=0
+          for f in coverage_lab/packets/round_*_*.json; do
+            python coverage_lab/validate_round_packet.py "$f"
+            count=$((count+1))
+          done
+          echo "validated_packets=$count"
+          test "$count" -eq 40
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-compression-phase1
+          path: coverage_lab/packets/
