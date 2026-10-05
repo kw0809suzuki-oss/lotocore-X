@@ -1,34 +1,27 @@
 # lotocore-X
 
-ロト7を使って、固定寄りの観測モデル **Loto Core** と、現在Fieldから構造を組み直す **X** を同じ条件で比較する実験場。
+LOTO6 / LOTO7 の実験リポジトリ。
 
-## 目的
+## Authority boundary / 正本境界
 
-- 「構造が薄く、こちらからFieldへ介入できない環境」でXが何をするかを見る。
-- Xがランダムな揺れを構造として過学習していないか確認する。
-- Loto Core / X / Random baseline を同じウォークフォワード条件で比較する。
+この repository の現行コード系は主に Loto Core / Dynamic Structure X / Random / Candidate Compression Phase 10。
+現在プロジェクトで扱っている Branch10 と Frozen v0.1（4回窓・30特徴・K30・9 states・Branch3）の正本は、この repository には存在しない。
 
-## 基本ループ
+特に注意:
+- archive 内の旧 slow/fast "frozen" は固定済み alpha の意味で、Frozen v0.1 ではない。
+- coverage_lab 内の "frozen Round Packet" は結果開示前に固定した packet の意味で、Frozen v0.1 ではない。
 
-過去履歴 → 予測 → 次回結果を開示 → 評価 → State更新 → 次回予測
+## Active surface / 現役面
+- lotocore.py
+- x_agent.py
+- fetch_loto7.py
+- walk_forward.py
+- coverage_lab/
+- .github/workflows/candidate-compression-phase10.yml
+- .github/workflows/loto7-phase10-next-snapshot.yml
+- .github/workflows/loto7-core-vs-random.yml
 
-## 評価
+LOTO6 は並行保存し、LOTO7 の現在研究と混同しない。
 
-- 本数字一致数
-- 平均一致数
-- 3個以上一致率
-- 予測集合の重心差
-- 予測集合の分散差
-- Xの構造更新回数
-
-> この実験は予測可能性の検証であり、当選を保証するものではありません。
-
-## 実行
-
-```bash
-pip install -r requirements.txt
-python fetch_loto7.py --limit 180
-python walk_forward.py --window 100
-```
-
-結果は `results/latest.csv` とコンソール集計に出ます。
+詳しい仕分けは docs/REPOSITORY_MAP.md を参照。
+過去 Probe / 旧 workflow は archive/ に保存し、現在Authorityとして読まない。

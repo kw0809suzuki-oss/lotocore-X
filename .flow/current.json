@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "updated_on": "2026-09-19",
+  "updated_on": "2026-10-05",
   "origin": "介入不能FieldでLoto Core / Dynamic Structure X / Randomを同条件比較し、X固有とField依存の作用を分離して観測する。",
   "state": {
     "phase": "loto7_phase10_practical_10ticket",
-    "status": "ticket_level_strict_forward_observed",
+    "status": "historical_phase10_repo_state_preserved",
     "repository_observed": [
       "LOTO7履歴は第1回〜第695回をWebから取得可能",
       "Candidate Compression Phase 1〜9は保持され、Phase 9 strict-forward run 35435885208はsuccess",
@@ -140,6 +140,11 @@
         ]
       ],
       "drive_snapshot_id": "1yxoGpcySWUQzVMDLAj9ibUtQKI0S0G7rkaP0W72sVLA"
+    },
+    "authority_boundary": {
+      "repository_current": "Phase10 practical 10-ticket line is the latest repository-local saved state.",
+      "project_current": "Branch10 / Frozen v0.1 research exists outside this repository and must not be inferred from legacy names here.",
+      "frozen_name_warning": "Archived slow-fast alpha-frozen probe and coverage_lab frozen Round Packet are not Frozen v0.1."
     }
   },
   "decisions": [
@@ -157,7 +162,7 @@
     ".github/workflows/loto7-phase10-next-snapshot.yml",
     ".github/workflows/candidate-compression-phase10.yml"
   ],
-  "next_observation": "第696回結果公開後、pre-draw固定済み10口だけを本数字・ボーナス数字へ照合する。券・K・rule・allocatorを結果後に変更しない。",
+  "next_observation": "Repository-local Phase10 state preserved. Do not use it as the project-wide latest coordinate without an external authority check.",
   "do_not_assume": [
     "adaptive Xが利益を出すこと",
     "fixed K10の3等1口が再現すること",
