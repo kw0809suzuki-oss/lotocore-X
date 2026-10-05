@@ -1,0 +1,34 @@
+name: LOTO7 Candidate Compression Phase 3 Strength Bins
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'coverage_lab/strength_bins.py'
+      - 'coverage_lab/fixed_k_curve.py'
+      - 'lotocore.py'
+      - 'x_agent.py'
+      - 'fetch_loto7.py'
+      - '.github/workflows/candidate-compression-phase3.yml'
+
+jobs:
+  strength-bins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch LOTO7 history
+        run: python fetch_loto7.py --limit 700
+      - name: Build fixed-K curve
+        run: python coverage_lab/fixed_k_curve.py --data data/loto7.csv --window 100
+      - name: Stratify by historical model strength
+        run: python coverage_lab/strength_bins.py --input results/loto7_candidate_compression_fixed_k.csv --lookback 50
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-compression-phase3-strength-bins
+          path: |
+            results/loto7_candidate_compression_fixed_k.csv
+            results/loto7_candidate_compression_strength_bins.csv
