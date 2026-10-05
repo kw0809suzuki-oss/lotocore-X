@@ -1,0 +1,23 @@
+name: LOTO7 Ratio Search Adjusted Null
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'probe_loto7_ratio_search_adjusted_null.py'
+      - '.github/workflows/loto7-ratio-search-adjusted-null.yml'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python fetch_loto7.py --limit 700
+      - run: python probe_loto7_ratio_search_adjusted_null.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: loto7-ratio-search-adjusted-null
+          path: results/loto7_ratio_search_adjusted_null.csv
