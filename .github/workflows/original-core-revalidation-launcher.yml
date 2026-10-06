@@ -1,0 +1,33 @@
+name: launch-original-core-revalidation-v0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/original-core-revalidation-launcher.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: original-core-revalidation-v0
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python original_core_revalidation/run.py
+      - name: Save results to research branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/original_core_revalidation
+          git commit -m "save original core revalidation result [skip ci]" || exit 0
+          git push origin HEAD:original-core-revalidation-v0
