@@ -1,0 +1,7 @@
+{
+  "target_count": 100,
+  "neighbor_k": 20,
+  "region_quantiles": [0.25, 0.75],
+  "random_repeats": 1000,
+  "random_seed": 20261006
+}
