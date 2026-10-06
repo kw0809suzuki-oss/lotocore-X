@@ -3,14 +3,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 import numpy as np
 import pandas as pd
 
 from fetch_loto7 import fetch
 
-ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "original_core_v0.json"
 RESULT_DIR = ROOT / "results" / "original_core_revalidation"
 
