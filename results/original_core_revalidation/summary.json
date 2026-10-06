@@ -1,0 +1,37 @@
+{
+  "experiment": "original_core_revalidation_v0",
+  "evaluation": "latest_100_walk_forward",
+  "target_round_start": 598,
+  "target_round_end": 697,
+  "targets": 100,
+  "core_hits": 19,
+  "core_hit_rate": 0.19,
+  "random_repeats": 1000,
+  "random_mean_hits": 12.782,
+  "random_median_hits": 13.0,
+  "random_5pct_hits": 7.0,
+  "random_95pct_hits": 18.0,
+  "difference_vs_random_mean": 6.218,
+  "one_sided_empirical_p": 0.03896103896103896,
+  "config": {
+    "target_count": 100,
+    "neighbor_k": 20,
+    "region_quantiles": [
+      0.25,
+      0.75
+    ],
+    "random_repeats": 1000,
+    "random_seed": 20261006
+  },
+  "input_sha256": "2eb2de867369c1444754072b6d694c090b7548d51edad6fff88cbd11d3e0753b",
+  "config_sha256": "204c4ab0f52519520615b0ea74df1bc468ede435f6bf4c8fea1d3cb00243cf35",
+  "boundary": [
+    "past-only",
+    "center+variance only",
+    "K fixed",
+    "IQR region fixed",
+    "same-width empirical-random regions",
+    "no ticket generation",
+    "no feature tuning"
+  ]
+}
