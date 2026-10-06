@@ -1,0 +1,33 @@
+{
+  "experiment_id": "original_core_revalidation_v0",
+  "target_round_start": 598,
+  "target_round_end": 697,
+  "targets": 100,
+  "features": ["center", "variance"],
+  "distance": "past_only_zscore_euclidean",
+  "neighbor_k": 20,
+  "region_quantiles": [0.25, 0.75],
+  "random_repeats": 5000,
+  "random_seed": 20261006,
+  "past_only": true,
+  "core_hits": 19,
+  "core_hit_rate": 0.19,
+  "primary_null": "same_width_empirical_anchor",
+  "random_hits_mean": 12.8782,
+  "random_hit_rate_mean": 0.128782,
+  "random_hits_median": 13.0,
+  "random_hits_p05": 8.0,
+  "random_hits_p95": 18.0,
+  "difference_hits_vs_random_mean": 6.1218,
+  "difference_rate_vs_random_mean": 0.061218,
+  "null_percentile_le_core": 0.9744,
+  "null_p_ge_core": 0.0436,
+  "secondary_uniform_null": {
+    "mean_hits": 8.6574,
+    "median_hits": 9.0,
+    "p05": 4.0,
+    "p95": 13.0,
+    "p_ge_core": 0.0006
+  },
+  "csv_sha256": "2eb2de867369c1444754072b6d694c090b7548d51edad6fff88cbd11d3e0753b"
+}
